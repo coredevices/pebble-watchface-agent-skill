@@ -89,6 +89,9 @@ static Star s_stars[NUM_STARS];
 static char s_time_buf[8];
 static char s_date_buf[16];
 
+// Unobstructed area (QuickView support)
+static Layer *s_window_layer;
+
 // GPath objects for lightsaber blades and hilts
 static GPath *s_hour_blade_path = NULL;
 static GPath *s_min_blade_path = NULL;
@@ -589,12 +592,57 @@ static void battery_callback(BatteryChargeState state) {
 }
 
 // ============================================================================
+// QUICKVIEW / UNOBSTRUCTED AREA HANDLERS
+// ============================================================================
+
+static void prv_unobstructed_will_change(GRect final_unobstructed_screen_area, void *context) {
+    // Nothing special needed before the transition
+}
+
+static void prv_unobstructed_change(AnimationProgress progress, void *context) {
+    GRect bounds = layer_get_unobstructed_bounds(s_window_layer);
+
+    // Recenter the clock face to the unobstructed area
+    s_center = GPoint(bounds.size.w / 2, bounds.size.h / 2);
+
+    // Reposition time text at top of unobstructed area
+    GRect time_frame = layer_get_frame(text_layer_get_layer(s_time_layer));
+    time_frame.origin.y = 2;
+    layer_set_frame(text_layer_get_layer(s_time_layer), time_frame);
+
+    // Reposition date at bottom of unobstructed area
+    GRect date_frame = layer_get_frame(text_layer_get_layer(s_date_layer));
+    date_frame.origin.y = bounds.size.h - 25;
+    layer_set_frame(text_layer_get_layer(s_date_layer), date_frame);
+
+    // Resize the canvas layer to the unobstructed area
+    layer_set_frame(s_canvas_layer, GRect(0, 0, bounds.size.w, bounds.size.h));
+
+    // Reinitialize stars for the new bounds
+    init_stars(bounds.size.w, bounds.size.h);
+
+    // Redraw
+    if (s_canvas_layer) {
+        layer_mark_dirty(s_canvas_layer);
+    }
+}
+
+static void prv_unobstructed_did_change(void *context) {
+    GRect full_bounds = layer_get_bounds(s_window_layer);
+    GRect bounds = layer_get_unobstructed_bounds(s_window_layer);
+    bool obstructed = !grect_equal(&full_bounds, &bounds);
+
+    // Hide date text when obstructed to reduce clutter
+    layer_set_hidden(text_layer_get_layer(s_date_layer), obstructed);
+}
+
+// ============================================================================
 // WINDOW HANDLERS
 // ============================================================================
 
 static void main_window_load(Window *window) {
-    Layer *window_layer = window_get_root_layer(window);
-    GRect bounds = layer_get_bounds(window_layer);
+    s_window_layer = window_get_root_layer(window);
+    GRect bounds = layer_get_bounds(s_window_layer);
 
     s_center = GPoint(bounds.size.w / 2, bounds.size.h / 2);
 
@@ -610,7 +658,7 @@ static void main_window_load(Window *window) {
     // Canvas layer (full screen)
     s_canvas_layer = layer_create(bounds);
     layer_set_update_proc(s_canvas_layer, canvas_update_proc);
-    layer_add_child(window_layer, s_canvas_layer);
+    layer_add_child(s_window_layer, s_canvas_layer);
 
     // Digital time at top (Star Wars yellow)
     s_time_layer = text_layer_create(GRect(0, 2, bounds.size.w, 30));
@@ -618,7 +666,7 @@ static void main_window_load(Window *window) {
     text_layer_set_text_color(s_time_layer, COLOR_TIME_TEXT);
     text_layer_set_font(s_time_layer, fonts_get_system_font(FONT_KEY_LECO_26_BOLD_NUMBERS_AM_PM));
     text_layer_set_text_alignment(s_time_layer, GTextAlignmentCenter);
-    layer_add_child(window_layer, text_layer_get_layer(s_time_layer));
+    layer_add_child(s_window_layer, text_layer_get_layer(s_time_layer));
 
     // Date at bottom
     s_date_layer = text_layer_create(GRect(0, bounds.size.h - 25, bounds.size.w, 22));
@@ -626,10 +674,22 @@ static void main_window_load(Window *window) {
     text_layer_set_text_color(s_date_layer, COLOR_DATE_TEXT);
     text_layer_set_font(s_date_layer, fonts_get_system_font(FONT_KEY_GOTHIC_18));
     text_layer_set_text_alignment(s_date_layer, GTextAlignmentCenter);
-    layer_add_child(window_layer, text_layer_get_layer(s_date_layer));
+    layer_add_child(s_window_layer, text_layer_get_layer(s_date_layer));
 
     // Initial update
     update_time();
+
+    // Apply correct layout in case QuickView is already active
+    prv_unobstructed_change(0, NULL);
+    prv_unobstructed_did_change(NULL);
+
+    // Subscribe to unobstructed area events for QuickView support
+    UnobstructedAreaHandlers handlers = {
+        .will_change = prv_unobstructed_will_change,
+        .change = prv_unobstructed_change,
+        .did_change = prv_unobstructed_did_change
+    };
+    unobstructed_area_service_subscribe(handlers, NULL);
 }
 
 static void main_window_unload(Window *window) {
