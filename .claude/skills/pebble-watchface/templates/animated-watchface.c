@@ -89,17 +89,21 @@ static int random_in_range(int min, int max) {
 // INITIALIZATION FUNCTIONS
 // ============================================================================
 
+// Screen dimensions — set in window_load from layer_get_bounds()
+static int s_screen_w = 200;
+static int s_screen_h = 228;
+
 static void init_moving_object(MovingObject *obj) {
-    obj->pos.y = random_in_range(30, 130);
+    obj->pos.y = random_in_range(30, s_screen_h - 40);
     obj->direction = (random_in_range(0, 1) * 2) - 1;
     obj->speed = random_in_range(1, 3);
-    obj->pos.x = (obj->direction == 1) ? -10 : 154;
+    obj->pos.x = (obj->direction == 1) ? -10 : s_screen_w + 10;
     obj->active = true;
 }
 
 static void init_particle(Particle *p) {
-    p->pos.x = random_in_range(10, 134);
-    p->pos.y = 168;  // Start at bottom
+    p->pos.x = random_in_range(10, s_screen_w - 10);
+    p->pos.y = s_screen_h;  // Start at bottom
     p->size = random_in_range(1, 3);
     p->speed = random_in_range(1, 3);
     p->active = true;
@@ -158,7 +162,7 @@ static void update_moving_objects(void) {
         s_objects[i].pos.x += s_objects[i].direction * s_objects[i].speed;
 
         // Reset when off screen
-        if ((s_objects[i].direction == 1 && s_objects[i].pos.x > 154) ||
+        if ((s_objects[i].direction == 1 && s_objects[i].pos.x > s_screen_w + 10) ||
             (s_objects[i].direction == -1 && s_objects[i].pos.x < -10)) {
             init_moving_object(&s_objects[i]);
         }
@@ -303,6 +307,10 @@ static void battery_callback(BatteryChargeState state) {
 static void main_window_load(Window *window) {
     Layer *window_layer = window_get_root_layer(window);
     GRect bounds = layer_get_bounds(window_layer);
+
+    // Store screen dimensions for animation calculations
+    s_screen_w = bounds.size.w;
+    s_screen_h = bounds.size.h;
 
     // Canvas layer (full screen for animations)
     s_canvas_layer = layer_create(bounds);

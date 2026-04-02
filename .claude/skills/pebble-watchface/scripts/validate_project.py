@@ -97,7 +97,7 @@ def validate_package_json(project_path):
 
         # Check target platforms
         platforms = pebble.get('targetPlatforms', [])
-        valid_platforms = ['aplite', 'basalt', 'chalk', 'diorite', 'emery']
+        valid_platforms = ['aplite', 'basalt', 'chalk', 'diorite', 'emery', 'flint', 'gabbro']
         for p in platforms:
             if p not in valid_platforms:
                 errors.append(f'Invalid target platform: {p}')

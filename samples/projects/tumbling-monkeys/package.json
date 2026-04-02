@@ -9,7 +9,7 @@
     "displayName": "Tumbling Monkeys",
     "uuid": "72ab22f9-99d8-451e-893e-b6f943a2ee32",
     "sdkVersion": "3",
-    "enableMultiJS": false,
+    "enableMultiJS": true,
     "targetPlatforms": ["aplite", "basalt", "chalk", "diorite"],
     "watchapp": { "watchface": true },
     "resources": { "media": [] }

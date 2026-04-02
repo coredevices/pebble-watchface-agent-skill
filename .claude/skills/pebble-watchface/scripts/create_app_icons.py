@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 """
-Create app icons from screenshot_basalt.png
+Create app icons from a screenshot.
 
 Usage:
     python3 create_app_icons.py [project_dir]
 
 If project_dir is not specified, uses current directory.
+Looks for screenshot_emery.png first, then screenshot_basalt.png.
 
 Creates:
     - icon_80x80.png (small app icon)
@@ -24,18 +25,23 @@ except ImportError:
 
 
 def create_app_icons(project_dir: str = "."):
-    """Create 80x80 and 144x144 app icons from screenshot_basalt.png"""
+    """Create 80x80 and 144x144 app icons from screenshot"""
 
     project_path = Path(project_dir)
-    screenshot_path = project_path / "screenshot_basalt.png"
+
+    # Try emery first, then basalt
+    screenshot_path = project_path / "screenshot_emery.png"
+    if not screenshot_path.exists():
+        screenshot_path = project_path / "screenshot_basalt.png"
 
     if not screenshot_path.exists():
-        print(f"Error: {screenshot_path} not found")
-        print("Run 'pebble screenshot --emulator basalt screenshot_basalt.png' first")
+        print(f"Error: No screenshot found (tried screenshot_emery.png and screenshot_basalt.png)")
+        print("Run 'pebble screenshot --no-open --emulator emery screenshot_emery.png' first")
         sys.exit(1)
 
     # Load the screenshot
     img = Image.open(screenshot_path)
+    print(f"Using: {screenshot_path}")
 
     # Create 80x80 icon
     icon_80 = img.resize((80, 80), Image.Resampling.LANCZOS)

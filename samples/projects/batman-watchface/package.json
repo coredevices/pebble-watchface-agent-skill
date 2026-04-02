@@ -9,7 +9,7 @@
     "displayName": "Bat Signal",
     "uuid": "488e39c1-7148-4705-8a56-c1edc46236ff",
     "sdkVersion": "3",
-    "enableMultiJS": false,
+    "enableMultiJS": true,
     "targetPlatforms": ["aplite", "basalt", "chalk", "diorite"],
     "watchapp": { "watchface": true },
     "resources": { "media": [] }

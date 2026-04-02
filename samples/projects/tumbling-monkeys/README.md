@@ -27,6 +27,7 @@ A fun, animated Pebble watchface featuring playful monkeys swinging through the 
 
 | Platform | Display | Status |
 |----------|---------|--------|
+| Emery | Color 200x228 | ✅ Supported |
 | Basalt | Color 144x168 | ✅ Supported |
 | Aplite | B&W 144x168 | ✅ Supported |
 | Chalk | Color 180x180 | ✅ Supported |

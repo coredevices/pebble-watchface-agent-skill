@@ -32,7 +32,7 @@ GColorBlack
 GColorWhite
 GColorClear  // Transparent
 
-// Color display colors (basalt, chalk only)
+// Color display colors (basalt, chalk, emery, gabbro, flint)
 GColorRed, GColorGreen, GColorBlue
 GColorYellow, GColorCyan, GColorMagenta
 GColorOrange, GColorPurple, GColorPink
@@ -49,8 +49,9 @@ GColorFromHEX(0xRRGGBB)
 ```c
 graphics_context_set_fill_color(GContext *ctx, GColor color);
 graphics_context_set_stroke_color(GContext *ctx, GColor color);
-graphics_context_set_stroke_width(GContext *ctx, uint8_t width);
+graphics_context_set_stroke_width(GContext *ctx, uint8_t width);  // odd values only
 graphics_context_set_text_color(GContext *ctx, GColor color);
+graphics_context_set_antialiased(GContext *ctx, bool enable);  // default true
 ```
 
 ### Drawing Shapes
@@ -62,12 +63,30 @@ graphics_draw_circle(GContext *ctx, GPoint center, uint16_t radius);
 // Rectangles
 graphics_fill_rect(GContext *ctx, GRect rect, uint16_t corner_radius, GCornerMask corners);
 graphics_draw_rect(GContext *ctx, GRect rect);
+graphics_draw_round_rect(GContext *ctx, GRect rect, uint16_t radius);
 
 // Lines
 graphics_draw_line(GContext *ctx, GPoint start, GPoint end);
 
 // Pixels
 graphics_draw_pixel(GContext *ctx, GPoint point);
+
+// Arcs and radial fills
+graphics_draw_arc(GContext *ctx, GRect rect, GOvalScaleMode scale_mode,
+                  int32_t angle_start, int32_t angle_end);
+graphics_fill_radial(GContext *ctx, GRect rect, GOvalScaleMode scale_mode,
+                     uint16_t inset_thickness, int32_t angle_start, int32_t angle_end);
+
+// Polar coordinate helpers
+GPoint gpoint_from_polar(GRect rect, GOvalScaleMode scale_mode, int32_t angle);
+GRect grect_centered_from_polar(GRect rect, GOvalScaleMode scale_mode,
+                                 int32_t angle, GSize size);
+```
+
+### Oval Scale Modes
+```c
+GOvalScaleModeFitCircle    // inscribed circle
+GOvalScaleModeFillCircle   // circumscribed circle
 ```
 
 ### Corner Masks for Rectangles
@@ -88,26 +107,15 @@ GCornerBottomRight
 
 ### Creating Paths
 ```c
-// Define path info structure
 static const GPathInfo PATH_INFO = {
     .num_points = 3,
     .points = (GPoint[]) {
-        {0, 0},
-        {10, 20},
-        {20, 0}
+        {0, 0}, {10, 20}, {20, 0}
     }
 };
 
 // Create path (do this once in window_load, not in update_proc!)
 GPath *path = gpath_create(&PATH_INFO);
-
-// Or with dynamic points
-static GPoint points[3];
-static GPathInfo path_info = {
-    .num_points = 3,
-    .points = points
-};
-GPath *path = gpath_create(&path_info);
 ```
 
 ### Drawing Paths
@@ -136,24 +144,20 @@ gpath_destroy(GPath *path);  // Call in window_unload!
 TRIG_MAX_ANGLE  // Full circle = 65536 (0x10000)
 TRIG_MAX_RATIO  // Maximum sin/cos value = 65536
 
-// Useful conversions
-#define DEG_TO_TRIG(deg) ((deg) * TRIG_MAX_ANGLE / 360)
+// Conversion macros
+DEG_TO_TRIGANGLE(degrees)  // Convert degrees to trig angle
 ```
 
 ### Functions
 ```c
-// Returns value in [-TRIG_MAX_RATIO, TRIG_MAX_RATIO]
-int32_t sin_lookup(int32_t angle);
+int32_t sin_lookup(int32_t angle);   // [-TRIG_MAX_RATIO, TRIG_MAX_RATIO]
 int32_t cos_lookup(int32_t angle);
-
-// Inverse trigonometry
 int32_t atan2_lookup(int16_t y, int16_t x);
 ```
 
 ### Usage Example
 ```c
-// Calculate point on circle
-int32_t angle = (hour * TRIG_MAX_ANGLE) / 12;  // Hour hand angle
+int32_t angle = (hour * TRIG_MAX_ANGLE) / 12;
 int16_t x = center.x + (sin_lookup(angle) * radius) / TRIG_MAX_RATIO;
 int16_t y = center.y - (cos_lookup(angle) * radius) / TRIG_MAX_RATIO;
 ```
@@ -164,6 +168,7 @@ int16_t y = center.y - (cos_lookup(angle) * radius) / TRIG_MAX_RATIO;
 ```c
 Layer *window_get_root_layer(Window *window);
 GRect layer_get_bounds(Layer *layer);
+GRect layer_get_unobstructed_bounds(Layer *layer);  // excludes timeline peek
 ```
 
 ### Custom Layers
@@ -173,13 +178,15 @@ void layer_destroy(Layer *layer);
 void layer_set_update_proc(Layer *layer, LayerUpdateProc update_proc);
 void layer_add_child(Layer *parent, Layer *child);
 void layer_mark_dirty(Layer *layer);  // Request redraw
+void layer_set_hidden(Layer *layer, bool hidden);
+void layer_set_frame(Layer *layer, GRect frame);
 ```
 
 ### Update Procedure
 ```c
 static void canvas_update_proc(Layer *layer, GContext *ctx) {
     GRect bounds = layer_get_bounds(layer);
-    // Draw here...
+    // Draw here using bounds.size.w and bounds.size.h
 }
 ```
 
@@ -192,14 +199,29 @@ void text_layer_set_font(TextLayer *layer, GFont font);
 void text_layer_set_text_color(TextLayer *layer, GColor color);
 void text_layer_set_background_color(TextLayer *layer, GColor color);
 void text_layer_set_text_alignment(TextLayer *layer, GTextAlignment alignment);
+void text_layer_set_overflow_mode(TextLayer *layer, GTextOverflowMode mode);
 Layer *text_layer_get_layer(TextLayer *layer);
 ```
 
-### Text Alignment
+### Text Alignment & Overflow
 ```c
 GTextAlignmentLeft
 GTextAlignmentCenter
 GTextAlignmentRight
+
+GTextOverflowModeWordWrap
+GTextOverflowModeTrailingEllipsis
+GTextOverflowModeFill
+```
+
+### Drawing Text Directly
+```c
+graphics_draw_text(GContext *ctx, const char *text, GFont font,
+                   GRect box, GTextOverflowMode overflow,
+                   GTextAlignment alignment, GTextAttributes *attributes);
+GSize graphics_text_layout_get_content_size(const char *text, GFont font,
+                   GRect box, GTextOverflowMode overflow,
+                   GTextAlignment alignment);
 ```
 
 ## Fonts
@@ -229,12 +251,20 @@ FONT_KEY_LECO_38_BOLD_NUMBERS
 FONT_KEY_LECO_42_NUMBERS
 ```
 
+### Custom Fonts
+```c
+GFont fonts_load_custom_font(ResHandle handle);
+void fonts_unload_custom_font(GFont font);
+// Usage: fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_MY_FONT_42))
+```
+
 ## Windows
 
 ### Creating Windows
 ```c
 Window *window_create(void);
 void window_destroy(Window *window);
+void window_set_background_color(Window *window, GColor color);
 void window_set_window_handlers(Window *window, WindowHandlers handlers);
 void window_stack_push(Window *window, bool animated);
 ```
@@ -254,14 +284,13 @@ window_set_window_handlers(window, (WindowHandlers) {
 time_t temp = time(NULL);
 struct tm *tick_time = localtime(&temp);
 
-// Access components
 tick_time->tm_hour   // 0-23
 tick_time->tm_min    // 0-59
 tick_time->tm_sec    // 0-59
-tick_time->tm_mday   // 1-31 (day of month)
-tick_time->tm_mon    // 0-11 (month)
+tick_time->tm_mday   // 1-31
+tick_time->tm_mon    // 0-11
 tick_time->tm_year   // Years since 1900
-tick_time->tm_wday   // 0-6 (day of week, Sunday = 0)
+tick_time->tm_wday   // 0-6 (Sunday = 0)
 ```
 
 ### Time Formatting
@@ -270,19 +299,8 @@ static char buffer[8];
 strftime(buffer, sizeof(buffer), "%H:%M", tick_time);  // 24-hour
 strftime(buffer, sizeof(buffer), "%I:%M", tick_time);  // 12-hour
 
-// Common format codes
-// %H - 24-hour (00-23)
-// %I - 12-hour (01-12)
-// %M - Minutes (00-59)
-// %S - Seconds (00-59)
-// %p - AM/PM
-// %a - Abbreviated weekday (Mon, Tue...)
-// %A - Full weekday
-// %b - Abbreviated month (Jan, Feb...)
-// %B - Full month
-// %d - Day of month (01-31)
-// %m - Month (01-12)
-// %Y - Year (2024)
+// Check user preference
+clock_is_24h_style()  // returns bool
 ```
 
 ### Tick Timer Service
@@ -290,19 +308,19 @@ strftime(buffer, sizeof(buffer), "%I:%M", tick_time);  // 12-hour
 void tick_timer_service_subscribe(TimeUnits units, TickHandler handler);
 void tick_timer_service_unsubscribe(void);
 
-// TimeUnits
-SECOND_UNIT
-MINUTE_UNIT
+// TimeUnits — ALWAYS USE MINUTE_UNIT for watchfaces (battery efficiency!)
+MINUTE_UNIT   // ← DEFAULT for watchfaces
 HOUR_UNIT
 DAY_UNIT
-MONTH_UNIT
-YEAR_UNIT
+SECOND_UNIT   // ← AVOID: drains battery rapidly
 
 // Handler
 static void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
     update_time();
 }
 ```
+
+**WARNING**: Using `SECOND_UNIT` causes a redraw every second and significantly reduces battery life. Only use if the user explicitly requests seconds display.
 
 ## App Timers (for Animation)
 
@@ -311,13 +329,9 @@ AppTimer *app_timer_register(uint32_t timeout_ms, AppTimerCallback callback, voi
 void app_timer_cancel(AppTimer *timer);
 bool app_timer_reschedule(AppTimer *timer, uint32_t new_timeout_ms);
 
-// Callback
 static void timer_callback(void *data) {
-    // Update animation
     layer_mark_dirty(s_canvas_layer);
-
-    // Re-register for next frame
-    s_timer = app_timer_register(50, timer_callback, NULL);
+    s_timer = app_timer_register(50, timer_callback, NULL);  // 50ms = 20 FPS
 }
 ```
 
@@ -328,44 +342,177 @@ BatteryChargeState battery_state_service_peek(void);
 void battery_state_service_subscribe(BatteryStateHandler handler);
 void battery_state_service_unsubscribe(void);
 
-// BatteryChargeState
 typedef struct {
     uint8_t charge_percent;  // 0-100
     bool is_charging;
     bool is_plugged;
 } BatteryChargeState;
+```
 
-// Handler
-static void battery_callback(BatteryChargeState charge_state) {
-    s_battery_level = charge_state.charge_percent;
+## Connection Service
+
+```c
+bool connection_service_peek_pebble_app_connection(void);
+void connection_service_subscribe(ConnectionHandlers handlers);
+void connection_service_unsubscribe(void);
+
+connection_service_subscribe((ConnectionHandlers) {
+    .pebble_app_connection_handler = bluetooth_callback
+});
+// Callback: void(bool connected)
+```
+
+## Vibration
+
+```c
+vibes_short_pulse(void);
+vibes_long_pulse(void);
+vibes_double_pulse(void);
+```
+
+## AppMessage (Phone ↔ Watch Communication)
+
+Used for weather, web data, and configuration. Requires PebbleKit JS on the phone side.
+
+### Setup (C side)
+```c
+// Register callbacks BEFORE opening (in init())
+app_message_register_inbox_received(inbox_received_callback);
+app_message_register_inbox_dropped(inbox_dropped_callback);
+app_message_register_outbox_failed(outbox_failed_callback);
+app_message_register_outbox_sent(outbox_sent_callback);
+
+// Open with buffer sizes
+app_message_open(128, 128);  // inbox_size, outbox_size
+```
+
+### Receiving Messages (C side)
+```c
+static void inbox_received_callback(DictionaryIterator *iterator, void *context) {
+    // Look up tuples by MESSAGE_KEY_* (auto-generated from package.json messageKeys)
+    Tuple *temp_tuple = dict_find(iterator, MESSAGE_KEY_TEMPERATURE);
+    Tuple *cond_tuple = dict_find(iterator, MESSAGE_KEY_CONDITIONS);
+
+    if (temp_tuple) {
+        int temperature = (int)temp_tuple->value->int32;
+    }
+    if (cond_tuple) {
+        char *conditions = cond_tuple->value->cstring;
+    }
 }
+```
+
+### Sending Messages (C side)
+```c
+DictionaryIterator *iter;
+app_message_outbox_begin(&iter);
+dict_write_uint8(iter, MESSAGE_KEY_REQUEST_WEATHER, 1);
+app_message_outbox_send();
+```
+
+### PebbleKit JS (Phone side — src/pkjs/index.js)
+```javascript
+// Send data to watch
+Pebble.sendAppMessage(
+    { 'TEMPERATURE': 72, 'CONDITIONS': 'Clear' },
+    function(e) { console.log('Sent!'); },
+    function(e) { console.log('Failed!'); }
+);
+
+// Receive from watch
+Pebble.addEventListener('appmessage', function(e) {
+    if (e.payload['REQUEST_WEATHER']) {
+        // Fetch weather and send back...
+    }
+});
+
+// JS runtime ready
+Pebble.addEventListener('ready', function(e) {
+    // Safe to start fetching data
+});
+
+// Available APIs in PebbleKit JS:
+// - XMLHttpRequest (HTTP requests)
+// - navigator.geolocation (GPS)
+// - localStorage (persistent key-value storage)
+// - Pebble.getActiveWatchInfo() (watch platform, model, firmware)
+```
+
+### package.json Requirements for AppMessage
+```json
+{
+  "pebble": {
+    "enableMultiJS": true,
+    "capabilities": ["location"],
+    "messageKeys": ["TEMPERATURE", "CONDITIONS", "REQUEST_WEATHER"]
+  }
+}
+```
+
+Message keys become `MESSAGE_KEY_*` constants in C code automatically.
+
+## Unobstructed Area (Quick View)
+
+Handle timeline peek that covers part of the screen:
+```c
+UnobstructedAreaHandlers handlers = {
+    .will_change = prv_unobstructed_will_change,
+    .change = prv_unobstructed_change,
+    .did_change = prv_unobstructed_did_change
+};
+unobstructed_area_service_subscribe(handlers, NULL);
+
+// Get visible bounds (excluding peek area)
+GRect visible = layer_get_unobstructed_bounds(window_layer);
 ```
 
 ## Random Numbers
 
 ```c
 #include <stdlib.h>
-
 srand(time(NULL));  // Seed once in init()
-int value = rand() % range;  // Get random number
-```
-
-### Safe Random in Range
-```c
-static int random_in_range(int min, int max) {
-    if (max <= min) return min;
-    int range = max - min + 1;
-    return min + (rand() % range);
-}
+int value = rand() % range;
 ```
 
 ## Logging
 
 ```c
-APP_LOG(APP_LOG_LEVEL_DEBUG, "Debug message: %d", value);
+APP_LOG(APP_LOG_LEVEL_DEBUG, "Debug: %d", value);
 APP_LOG(APP_LOG_LEVEL_INFO, "Info message");
 APP_LOG(APP_LOG_LEVEL_WARNING, "Warning!");
-APP_LOG(APP_LOG_LEVEL_ERROR, "Error occurred!");
+APP_LOG(APP_LOG_LEVEL_ERROR, "Error!");
+```
+
+## Platform Detection
+
+```c
+#ifdef PBL_COLOR
+    // Color display (basalt, chalk, emery, gabbro, flint)
+#else
+    // Black and white (aplite, diorite)
+#endif
+
+#ifdef PBL_ROUND
+    // Round display (chalk, gabbro)
+#else
+    // Rectangular display (aplite, basalt, diorite, emery, flint)
+#endif
+
+// Round/rect conditional macro
+PBL_IF_ROUND_ELSE(round_value, rect_value)
+PBL_IF_COLOR_ELSE(color_value, bw_value)
+
+// Platform-specific
+#ifdef PBL_PLATFORM_EMERY    // Pebble Time 2 (200x228)
+#endif
+#ifdef PBL_PLATFORM_BASALT   // Pebble Time (144x168)
+#endif
+#ifdef PBL_PLATFORM_CHALK    // Pebble Time Round (180x180)
+#endif
+#ifdef PBL_PLATFORM_APLITE   // Pebble Classic (144x168, B&W)
+#endif
+#ifdef PBL_PLATFORM_DIORITE  // Pebble 2 (144x168, B&W)
+#endif
 ```
 
 ## Application Lifecycle
@@ -373,14 +520,12 @@ APP_LOG(APP_LOG_LEVEL_ERROR, "Error occurred!");
 ```c
 static void init(void) {
     srand(time(NULL));
-
     s_main_window = window_create();
     window_set_window_handlers(s_main_window, (WindowHandlers) {
         .load = main_window_load,
         .unload = main_window_unload
     });
     window_stack_push(s_main_window, true);
-
     tick_timer_service_subscribe(MINUTE_UNIT, tick_handler);
     battery_state_service_subscribe(battery_callback);
 }
@@ -399,29 +544,13 @@ int main(void) {
 }
 ```
 
-## Platform Detection
+## Watch Info
 
 ```c
-#ifdef PBL_COLOR
-    // Color display (basalt, chalk)
-    graphics_context_set_fill_color(ctx, GColorRed);
-#else
-    // Black and white (aplite, diorite)
-    graphics_context_set_fill_color(ctx, GColorWhite);
-#endif
+WatchInfoModel watch_info_get_model(void);
+// Returns: PEBBLE_ORIGINAL, PEBBLE_TIME, PEBBLE_TIME_ROUND_14,
+//          PEBBLE_2_HR, COREDEVICES_PT2, COREDEVICES_PR2, COREDEVICES_P2D
 
-#ifdef PBL_ROUND
-    // Round display (chalk)
-#else
-    // Rectangular display
-#endif
-
-#ifdef PBL_PLATFORM_APLITE
-#endif
-#ifdef PBL_PLATFORM_BASALT
-#endif
-#ifdef PBL_PLATFORM_CHALK
-#endif
-#ifdef PBL_PLATFORM_DIORITE
-#endif
+WatchInfoVersion watch_info_get_firmware_version(void);
+WatchInfoColor watch_info_get_color(void);
 ```

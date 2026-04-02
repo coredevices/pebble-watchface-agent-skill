@@ -11,9 +11,9 @@ Options:
     --delay MS      Delay between frames in milliseconds (default: 500)
 
 Creates:
-    - preview_basalt.gif
-    - preview_aplite.gif
-    - preview_chalk.gif
+    - preview_emery.gif
+    - preview_basalt.gif (if emulator running)
+    - preview_chalk.gif (if emulator running)
 
 Requires: Pillow, pebble SDK installed
 """
@@ -45,7 +45,7 @@ def capture_frames(emulator: str, project_dir: Path, num_frames: int, frame_dela
 
         # Capture screenshot
         result = subprocess.run(
-            ["pebble", "screenshot", "--emulator", emulator, str(frame_path)],
+            ["pebble", "screenshot", "--no-open", "--emulator", emulator, str(frame_path)],
             capture_output=True,
             text=True
         )
@@ -99,7 +99,7 @@ def create_preview_gifs(project_dir: str = ".", num_frames: int = 10, frame_dela
     """Create animated GIF previews for all platforms"""
 
     project_path = Path(project_dir)
-    platforms = ["basalt", "aplite", "chalk"]
+    platforms = ["emery", "basalt", "aplite", "chalk"]
 
     print(f"Creating preview GIFs with {num_frames} frames each...")
     print(f"Frame capture delay: {frame_delay_ms}ms")
@@ -110,7 +110,7 @@ def create_preview_gifs(project_dir: str = ".", num_frames: int = 10, frame_dela
 
         # Check if emulator is running by trying to capture
         test_result = subprocess.run(
-            ["pebble", "screenshot", "--emulator", platform, "/dev/null"],
+            ["pebble", "screenshot", "--no-open", "--emulator", platform, "/dev/null"],
             capture_output=True,
             text=True
         )

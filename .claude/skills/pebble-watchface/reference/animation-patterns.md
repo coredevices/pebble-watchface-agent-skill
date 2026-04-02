@@ -89,18 +89,19 @@ typedef struct {
     bool active;
 } Moving;
 
-static void update_moving(Moving *obj) {
+// Use screen_w and screen_h from layer_get_bounds() — don't hardcode!
+static void update_moving(Moving *obj, int screen_w, int screen_h) {
     if (!obj->active) return;
 
     obj->pos.x += obj->direction * obj->speed;
 
-    // Wrap around screen edges
-    if (obj->direction == 1 && obj->pos.x > 154) {
+    // Wrap around screen edges (use dynamic screen dimensions)
+    if (obj->direction == 1 && obj->pos.x > screen_w + 10) {
         obj->pos.x = -10;
-        obj->pos.y = random_in_range(20, 140);
+        obj->pos.y = random_in_range(20, screen_h - 30);
     } else if (obj->direction == -1 && obj->pos.x < -10) {
-        obj->pos.x = 154;
-        obj->pos.y = random_in_range(20, 140);
+        obj->pos.x = screen_w + 10;
+        obj->pos.y = random_in_range(20, screen_h - 30);
     }
 }
 ```
@@ -140,9 +141,10 @@ typedef struct {
 #define MAX_PARTICLES 8
 static Particle particles[MAX_PARTICLES];
 
-static void init_particle(Particle *p) {
-    p->pos.x = random_in_range(10, 134);
-    p->pos.y = 168;  // Start at bottom
+// Pass screen dimensions from layer_get_bounds()
+static void init_particle(Particle *p, int screen_w, int screen_h) {
+    p->pos.x = random_in_range(10, screen_w - 10);
+    p->pos.y = screen_h;  // Start at bottom
     p->size = random_in_range(1, 3);
     p->speed = random_in_range(1, 3);
     p->active = true;
@@ -209,10 +211,10 @@ static bool check_collision(GPoint pos1, int radius1, GPoint pos2, int radius2) 
 For many moving objects, use a spatial grid to reduce collision checks from O(n²) to O(n):
 
 ```c
+// Use dynamic screen dimensions from layer_get_bounds()
 #define GRID_WIDTH 3
 #define GRID_HEIGHT 3
-#define GRID_CELL_WIDTH (144 / GRID_WIDTH)
-#define GRID_CELL_HEIGHT (168 / GRID_HEIGHT)
+// Calculate cell sizes at runtime using bounds.size.w / GRID_WIDTH
 #define GRID_CELL_COUNT (GRID_WIDTH * GRID_HEIGHT)
 
 static int objects_in_grid[GRID_CELL_COUNT][MAX_OBJECTS];
@@ -362,7 +364,8 @@ typedef struct {
     int direction;
 } Creature;
 
-static void update_creature(Creature *c) {
+// Pass screen_w from layer_get_bounds().size.w
+static void update_creature(Creature *c, int screen_w) {
     c->state_timer++;
 
     switch (c->state) {
@@ -376,7 +379,7 @@ static void update_creature(Creature *c) {
 
         case STATE_MOVING:
             c->pos.x += c->direction * 2;
-            if (c->state_timer > 50 || c->pos.x < 10 || c->pos.x > 134) {
+            if (c->state_timer > 50 || c->pos.x < 10 || c->pos.x > screen_w - 10) {
                 c->state = STATE_IDLE;
                 c->state_timer = 0;
             }

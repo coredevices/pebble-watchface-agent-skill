@@ -1,0 +1,21 @@
+{
+  "name": "starwars-lightsaber-duel",
+  "author": "Claude",
+  "version": "1.0.0",
+  "keywords": ["pebble-app"],
+  "private": true,
+  "dependencies": {},
+  "pebble": {
+    "displayName": "Lightsaber Duel",
+    "uuid": "42820506-6334-45ef-91f8-a344d09046c9",
+    "sdkVersion": "3",
+    "enableMultiJS": true,
+    "targetPlatforms": ["emery"],
+    "watchapp": {
+      "watchface": true
+    },
+    "resources": {
+      "media": []
+    }
+  }
+}

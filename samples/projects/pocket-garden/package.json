@@ -9,7 +9,7 @@
     "displayName": "Pocket Garden",
     "uuid": "4a318608-37db-43d8-b3ec-f66e6b3ee942",
     "sdkVersion": "3",
-    "enableMultiJS": false,
+    "enableMultiJS": true,
     "targetPlatforms": ["aplite", "basalt", "chalk", "diorite"],
     "watchapp": { "watchface": true },
     "resources": { "media": [] }

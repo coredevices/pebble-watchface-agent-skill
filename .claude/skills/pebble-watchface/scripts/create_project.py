@@ -11,7 +11,7 @@ Usage:
 Options:
     --animated    Use animated watchface template
     --static      Use static/analog watchface template
-    --rockyjs     Use Rocky.js JavaScript template
+    --weather     Use weather watchface template (includes pkjs)
     --author      Author name
     --display     Display name for the watchface
 """
@@ -34,7 +34,7 @@ def generate_uuid():
     return str(uuid.uuid4())
 
 
-def create_package_json(project_path, name, display_name, author):
+def create_package_json(project_path, name, display_name, author, template_type='animated'):
     """Create package.json file"""
     content = {
         "name": slugify(name),
@@ -47,8 +47,8 @@ def create_package_json(project_path, name, display_name, author):
             "displayName": display_name,
             "uuid": generate_uuid(),
             "sdkVersion": "3",
-            "enableMultiJS": False,
-            "targetPlatforms": ["aplite", "basalt", "chalk", "diorite"],
+            "enableMultiJS": True,
+            "targetPlatforms": ["emery"],
             "watchapp": {
                 "watchface": True
             },
@@ -57,6 +57,11 @@ def create_package_json(project_path, name, display_name, author):
             }
         }
     }
+
+    # Weather projects need messageKeys and location capability
+    if template_type == 'weather':
+        content["pebble"]["capabilities"] = ["location"]
+        content["pebble"]["messageKeys"] = ["TEMPERATURE", "CONDITIONS", "REQUEST_WEATHER"]
 
     import json
     with open(project_path / 'package.json', 'w') as f:
@@ -104,7 +109,7 @@ def build(ctx):
     ctx.set_group('bundle')
     ctx.pbl_bundle(
         binaries=binaries,
-        js=ctx.path.ant_glob(['src/js/**/*.js', 'src/js/**/*.json', 'src/common/**/*.js', 'src/common/**/*.json'])
+        js=ctx.path.ant_glob(['src/pkjs/**/*.js', 'src/pkjs/**/*.json'])
     )
 """
     with open(project_path / 'wscript', 'w') as f:
@@ -140,41 +145,39 @@ Thumbs.db
 
 def copy_template(project_path, template_type, skill_path):
     """Copy the appropriate template file"""
-    templates = {
+    c_templates = {
         'animated': 'animated-watchface.c',
         'static': 'static-watchface.c',
-        'rockyjs': 'rocky-watchface.js'
+        'weather': 'weather-watchface.c'
     }
 
-    template_file = templates.get(template_type, 'animated-watchface.c')
+    template_file = c_templates.get(template_type, 'animated-watchface.c')
     template_path = skill_path / 'templates' / template_file
 
-    if template_type == 'rockyjs':
-        # JavaScript project structure
-        js_dir = project_path / 'src' / 'pkjs'
-        js_dir.mkdir(parents=True, exist_ok=True)
+    # C project structure
+    c_dir = project_path / 'src' / 'c'
+    c_dir.mkdir(parents=True, exist_ok=True)
 
-        if template_path.exists():
-            shutil.copy(template_path, js_dir / 'index.js')
-            print(f"  Created src/pkjs/index.js from {template_file}")
-        else:
-            # Create minimal JS file
-            with open(js_dir / 'index.js', 'w') as f:
-                f.write("// Rocky.js watchface\nvar rocky = require('rocky');\n")
-            print(f"  Created src/pkjs/index.js (minimal)")
+    if template_path.exists():
+        shutil.copy(template_path, c_dir / 'main.c')
+        print(f"  Created src/c/main.c from {template_file}")
     else:
-        # C project structure
-        c_dir = project_path / 'src' / 'c'
-        c_dir.mkdir(parents=True, exist_ok=True)
+        with open(c_dir / 'main.c', 'w') as f:
+            f.write('#include <pebble.h>\n\nint main(void) {\n    app_event_loop();\n    return 0;\n}\n')
+        print(f"  Created src/c/main.c (minimal)")
 
-        if template_path.exists():
-            shutil.copy(template_path, c_dir / 'main.c')
-            print(f"  Created src/c/main.c from {template_file}")
+    # Weather template also needs pkjs
+    if template_type == 'weather':
+        pkjs_dir = project_path / 'src' / 'pkjs'
+        pkjs_dir.mkdir(parents=True, exist_ok=True)
+        pkjs_template = skill_path / 'templates' / 'pkjs-weather.js'
+        if pkjs_template.exists():
+            shutil.copy(pkjs_template, pkjs_dir / 'index.js')
+            print(f"  Created src/pkjs/index.js from pkjs-weather.js")
         else:
-            # Create minimal C file
-            with open(c_dir / 'main.c', 'w') as f:
-                f.write('#include <pebble.h>\n\nint main(void) {\n    app_event_loop();\n    return 0;\n}\n')
-            print(f"  Created src/c/main.c (minimal)")
+            with open(pkjs_dir / 'index.js', 'w') as f:
+                f.write("// PebbleKit JS\nPebble.addEventListener('ready', function() {});\n")
+            print(f"  Created src/pkjs/index.js (minimal)")
 
 
 def main():
@@ -182,7 +185,7 @@ def main():
     parser.add_argument('name', help='Project name')
     parser.add_argument('--animated', action='store_true', help='Use animated template')
     parser.add_argument('--static', action='store_true', help='Use static/analog template')
-    parser.add_argument('--rockyjs', action='store_true', help='Use Rocky.js template')
+    parser.add_argument('--weather', action='store_true', help='Use weather template (includes pkjs)')
     parser.add_argument('--author', default='Your Name', help='Author name')
     parser.add_argument('--display', default=None, help='Display name')
     parser.add_argument('--output', '-o', default='.', help='Output directory')
@@ -192,8 +195,8 @@ def main():
     # Determine template type
     if args.static:
         template_type = 'static'
-    elif args.rockyjs:
-        template_type = 'rockyjs'
+    elif args.weather:
+        template_type = 'weather'
     else:
         template_type = 'animated'
 
@@ -221,7 +224,7 @@ def main():
     skill_path = script_path.parent
 
     # Create files
-    create_package_json(project_path, args.name, display_name, args.author)
+    create_package_json(project_path, args.name, display_name, args.author, template_type)
     create_wscript(project_path)
     create_gitignore(project_path)
     copy_template(project_path, template_type, skill_path)
@@ -231,7 +234,7 @@ def main():
     print(f"  1. cd {project_path}")
     print(f"  2. Edit src/c/main.c (or src/pkjs/index.js)")
     print(f"  3. pebble build")
-    print(f"  4. pebble install --emulator basalt")
+    print(f"  4. pebble install --emulator emery")
 
 
 if __name__ == '__main__':

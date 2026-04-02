@@ -138,29 +138,32 @@ static void draw_hands(GContext *ctx, struct tm *time) {
     graphics_fill_circle(ctx, s_center, 2);
 }
 
-static void draw_decorations(GContext *ctx) {
+static void draw_decorations(GContext *ctx, GRect bounds) {
     // Add any decorative elements here
     // Example: Draw a simple border
 
     #ifdef PBL_ROUND
     // Round display decorations
+    (void)bounds;
     #else
     // Rectangular display decorations
     graphics_context_set_stroke_color(ctx, GColorWhite);
     graphics_context_set_stroke_width(ctx, 1);
 
-    // Corner accents
+    // Corner accents — use dynamic bounds
+    int w = bounds.size.w - 5;
+    int h = bounds.size.h - 5;
     graphics_draw_line(ctx, GPoint(5, 5), GPoint(20, 5));
     graphics_draw_line(ctx, GPoint(5, 5), GPoint(5, 20));
 
-    graphics_draw_line(ctx, GPoint(139, 5), GPoint(124, 5));
-    graphics_draw_line(ctx, GPoint(139, 5), GPoint(139, 20));
+    graphics_draw_line(ctx, GPoint(w, 5), GPoint(w - 15, 5));
+    graphics_draw_line(ctx, GPoint(w, 5), GPoint(w, 20));
 
-    graphics_draw_line(ctx, GPoint(5, 163), GPoint(20, 163));
-    graphics_draw_line(ctx, GPoint(5, 163), GPoint(5, 148));
+    graphics_draw_line(ctx, GPoint(5, h), GPoint(20, h));
+    graphics_draw_line(ctx, GPoint(5, h), GPoint(5, h - 15));
 
-    graphics_draw_line(ctx, GPoint(139, 163), GPoint(124, 163));
-    graphics_draw_line(ctx, GPoint(139, 163), GPoint(139, 148));
+    graphics_draw_line(ctx, GPoint(w, h), GPoint(w - 15, h));
+    graphics_draw_line(ctx, GPoint(w, h), GPoint(w, h - 15));
     #endif
 }
 
@@ -176,7 +179,7 @@ static void canvas_update_proc(Layer *layer, GContext *ctx) {
     graphics_fill_rect(ctx, bounds, 0, GCornerNone);
 
     // Draw decorations (background)
-    draw_decorations(ctx);
+    draw_decorations(ctx, bounds);
 
     // Draw clock face
     draw_clock_face(ctx);

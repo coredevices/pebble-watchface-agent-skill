@@ -9,8 +9,8 @@
     "displayName": "{{WATCHFACE_DISPLAY_NAME}}",
     "uuid": "{{UUID}}",
     "sdkVersion": "3",
-    "enableMultiJS": false,
-    "targetPlatforms": ["aplite", "basalt", "chalk", "diorite"],
+    "enableMultiJS": true,
+    "targetPlatforms": ["emery"],
     "watchapp": {
       "watchface": true
     },

@@ -9,7 +9,7 @@
     "displayName": "Beach Day",
     "uuid": "ba3ad478-f191-4d0d-a5f5-6d66d7bf08d1",
     "sdkVersion": "3",
-    "enableMultiJS": false,
+    "enableMultiJS": true,
     "targetPlatforms": ["aplite", "basalt", "chalk", "diorite"],
     "watchapp": { "watchface": true },
     "resources": { "media": [] }

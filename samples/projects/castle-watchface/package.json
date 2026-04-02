@@ -9,7 +9,7 @@
     "displayName": "Castle Knights",
     "uuid": "5d1c07cf-889c-46a4-a527-6d98792910b0",
     "sdkVersion": "3",
-    "enableMultiJS": false,
+    "enableMultiJS": true,
     "targetPlatforms": ["aplite", "basalt", "chalk", "diorite"],
     "watchapp": { "watchface": true },
     "resources": { "media": [] }

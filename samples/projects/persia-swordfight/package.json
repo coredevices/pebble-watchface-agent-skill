@@ -9,7 +9,7 @@
     "displayName": "Persia Swordfight",
     "uuid": "1b1a0809-9312-4c89-8ef7-9f6687b9a562",
     "sdkVersion": "3",
-    "enableMultiJS": false,
+    "enableMultiJS": true,
     "targetPlatforms": ["aplite", "basalt", "chalk", "diorite"],
     "watchapp": { "watchface": true },
     "resources": { "media": [] }

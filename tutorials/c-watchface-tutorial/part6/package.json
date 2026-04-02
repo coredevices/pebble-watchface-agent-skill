@@ -1,0 +1,44 @@
+{
+  "name": "tutorial-part6",
+  "author": "Pebble Tutorial",
+  "version": "1.0.0",
+  "keywords": ["pebble-app"],
+  "private": true,
+  "dependencies": {
+    "@rebble/clay": "^1.0.8"
+  },
+  "pebble": {
+    "displayName": "Tutorial Part 6",
+    "uuid": "00000000-0000-0000-0000-000000000006",
+    "sdkVersion": "3",
+    "enableMultiJS": true,
+    "targetPlatforms": ["aplite", "basalt", "chalk", "diorite", "emery", "flint", "gabbro"],
+    "capabilities": ["location", "configurable"],
+    "messageKeys": ["TEMPERATURE", "CONDITIONS", "REQUEST_WEATHER",
+                     "BackgroundColor", "TextColor", "TemperatureUnit", "ShowDate"],
+    "watchapp": {
+      "watchface": true
+    },
+    "resources": {
+      "media": [
+        {
+          "type": "font",
+          "name": "FONT_JERSEY_56",
+          "file": "fonts/Jersey10-Regular.ttf",
+          "compatibility": "2.7"
+        },
+        {
+          "type": "font",
+          "name": "FONT_JERSEY_24",
+          "file": "fonts/Jersey10-Regular.ttf",
+          "compatibility": "2.7"
+        },
+        {
+          "type": "png",
+          "name": "IMAGE_BT_ICON",
+          "file": "images/bt-icon.png"
+        }
+      ]
+    }
+  }
+}

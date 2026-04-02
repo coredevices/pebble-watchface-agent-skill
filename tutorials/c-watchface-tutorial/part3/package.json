@@ -1,0 +1,39 @@
+{
+  "name": "tutorial-part3",
+  "author": "Pebble Tutorial",
+  "version": "1.0.0",
+  "keywords": ["pebble-app"],
+  "private": true,
+  "dependencies": {},
+  "pebble": {
+    "displayName": "Tutorial Part 3",
+    "uuid": "00000000-0000-0000-0000-000000000003",
+    "sdkVersion": "3",
+    "enableMultiJS": true,
+    "targetPlatforms": ["aplite", "basalt", "chalk", "diorite", "emery", "flint", "gabbro"],
+    "watchapp": {
+      "watchface": true
+    },
+    "resources": {
+      "media": [
+        {
+          "type": "font",
+          "name": "FONT_JERSEY_56",
+          "file": "fonts/Jersey10-Regular.ttf",
+          "compatibility": "2.7"
+        },
+        {
+          "type": "font",
+          "name": "FONT_JERSEY_24",
+          "file": "fonts/Jersey10-Regular.ttf",
+          "compatibility": "2.7"
+        },
+        {
+          "type": "png",
+          "name": "IMAGE_BT_ICON",
+          "file": "images/bt-icon.png"
+        }
+      ]
+    }
+  }
+}
