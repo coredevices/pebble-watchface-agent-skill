@@ -221,6 +221,10 @@ pebble install --cloudpebble
 - [C Watchface Tutorial (source)](https://github.com/coredevices/c-watchface-tutorial)
 - [Claude Code Documentation](https://docs.anthropic.com/claude-code)
 
+## Acknowledgments
+
+This skill is derived from the excellent [pebble-wf-agent-skill](https://github.com/priyankark/pebble-wf-agent-skill) by [priyankark](https://github.com/priyankark).
+
 ## License
 
 This skill and associated templates are provided for creating Pebble watchfaces. Individual watchfaces you create are your own.

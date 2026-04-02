@@ -1,19 +1,28 @@
 {
-  "name": "tutorial-part2",
-  "author": "Pebble Tutorial",
+  "name": "watchface-tutorial",
+  "author": "MakeAwesomeHappen",
   "version": "1.0.0",
   "keywords": ["pebble-app"],
   "private": true,
   "dependencies": {},
   "pebble": {
-    "displayName": "Tutorial Part 2",
-    "uuid": "00000000-0000-0000-0000-000000000002",
+    "displayName": "Tutorial Watchface",
+    "uuid": "F12F8A05-DCAD-4650-A646-2319AD1342B3",
     "sdkVersion": "3",
     "enableMultiJS": true,
-    "targetPlatforms": ["aplite", "basalt", "chalk", "diorite", "emery", "flint", "gabbro"],
+    "targetPlatforms": [
+      "aplite",
+      "basalt",
+      "chalk",
+      "diorite",
+      "emery",
+      "flint",
+      "gabbro"
+    ],
     "watchapp": {
       "watchface": true
     },
+    "messageKeys": [],
     "resources": {
       "media": [
         {
