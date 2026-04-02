@@ -34,13 +34,6 @@ This repository contains a **Claude Code skill** that transforms natural languag
 
 **Default target: Emery (Pebble Time 2, 200x228 color rectangular display).**
 
-## Sample Watchfaces
-
-These watchfaces were generated using this agent skill and are live on the Rebble App Store:
-
-- [The Swordsmen](https://store-beta.rebble.io/app/6959f7d4828bd90009ec53a8) - Animated Prince of Persia sword fighting scene
-- [Castle Knights](https://store-beta.rebble.io/app/6959302c39d92d0009244929) - Animated medieval castle with jousting knights
-
 ## Prerequisites
 
 Before using this skill, ensure you have:
@@ -186,7 +179,7 @@ pebble install --emulator emery
 
 ### On Physical Watch
 ```bash
-pebble install --cloudpebble
+pebble install --phone
 ```
 
 ## Key Technical Constraints
@@ -218,8 +211,7 @@ pebble install --cloudpebble
 
 ## Resources
 
-- [Rebble Developer Portal](https://developer.repebble.com/)
-- [Pebble SDK Documentation](https://developer.repebble.com/docs/c/)
+- [Pebble SDK Documentation](https://developer.repebble.com/)
 - [Open-Meteo Weather API](https://open-meteo.com/en/docs)
 - [C Watchface Tutorial (source)](https://github.com/coredevices/c-watchface-tutorial)
 - [Claude Code Documentation](https://docs.anthropic.com/claude-code)
