@@ -2,6 +2,24 @@
 
 Generate complete, buildable Pebble smartwatch watchfaces using Claude Code with full PBW artifact output and QEMU emulator testing.
 
+## Get Started
+
+```bash
+git clone https://github.com/coredevices/pebble-watchface-agent-skill
+cd pebble-watchface-agent-skill
+claude
+```
+
+Then just ask:
+
+```
+Create an animated underwater watchface with fish and bubbles
+```
+
+Claude automatically detects the skill and handles everything — design, code generation, build, emulator testing, and screenshot verification.
+
+> **Requires:** [Claude Code](https://docs.anthropic.com/en/docs/claude-code) and the [Pebble SDK](https://developer.repebble.com/sdk/) installed.
+
 ## What This Does
 
 This repository contains a **Claude Code skill** that transforms natural language descriptions into fully functional Pebble watchfaces. Simply describe what you want, and Claude will:
@@ -32,24 +50,9 @@ Before using this skill, ensure you have:
 - **QEMU** for emulator testing (bundled with Pebble SDK)
 - **Python 3** with Pillow (`pip install Pillow`) for icon and GIF generation
 
-## Quick Start
+## Example Prompts
 
-### 1. Clone This Repository
-
-```bash
-git clone <repo-url>
-cd pebble-watchface-agent-skill
-```
-
-### 2. Run Claude Code
-
-```bash
-claude
-```
-
-### 3. Ask for a Watchface
-
-Simply describe what you want:
+Here are some things you can ask for:
 
 ```
 Create a retro digital watchface with a neon green display on black background
