@@ -481,6 +481,7 @@ Watch (C code) ←AppMessage→ Phone (PebbleKit JS) ←HTTP→ Web API
 ### Required Files
 1. **src/c/main.c** — C code with AppMessage handlers
 2. **src/pkjs/index.js** — JavaScript running on phone
+3. **wscript** — Must use `pbl_build(..., bin_type='app')` with `js_entry_file='src/pkjs/index.js'` (the `pbl_program` pattern does NOT work with pkjs). Use the wscript template.
 
 ### Required package.json Changes
 ```json
@@ -537,6 +538,43 @@ Pebble.addEventListener('appmessage', function(e) {
 ```
 
 See `tutorials/c-watchface-tutorial/part4/` for a complete working example.
+
+### Visual Weather Reactions (C Side)
+
+The pkjs sends weather as human-readable strings ("Clear", "Cloudy", "Rain", etc.). To change visuals based on weather (sky color, particles, accessories), reverse-map the string to a numeric code on the C side:
+
+```c
+static int s_weather_code = -1;  // -1 = no data yet
+
+// In inbox_received_callback, after reading CONDITIONS:
+const char *c = cond_tuple->value->cstring;
+if (strcmp(c, "Clear") == 0) s_weather_code = 0;
+else if (strcmp(c, "Cloudy") == 0) s_weather_code = 2;
+else if (strcmp(c, "Rain") == 0 || strcmp(c, "Showers") == 0) s_weather_code = 63;
+else if (strcmp(c, "Snow") == 0) s_weather_code = 73;
+else if (strcmp(c, "Fog") == 0) s_weather_code = 45;
+else if (strcmp(c, "T-Storm") == 0) s_weather_code = 95;
+else s_weather_code = 2;
+
+// Then in draw functions, branch on s_weather_code:
+if (s_weather_code == 0) { /* draw sun, blue sky */ }
+else if (s_weather_code >= 61) { /* draw rain drops */ }
+else if (s_weather_code >= 71) { /* draw snowflakes, white ground */ }
+```
+
+### Battery-Efficient Visual Variety
+
+Even with `MINUTE_UNIT` updates (no animation timer), you can create visual variety by using deterministic math tied to the minute counter. Each minute tick increments a frame counter, and drawing functions use it to offset positions:
+
+```c
+static int s_frame = 0;  // incremented in tick_handler
+
+// In draw function — "animated" rain/snow without a timer:
+int rx = (i * 37 + s_frame * 7) % bounds.size.w;
+int ry = 40 + (i * 23 + s_frame * 11) % sky_height;
+```
+
+This gives a different scene each minute without burning battery on sub-second redraws.
 
 ---
 
@@ -651,7 +689,7 @@ pebble emu-tap --emulator emery
 ## Constraints
 
 1. **No Floating Point** — Use sin_lookup/cos_lookup only
-2. **Pre-allocate Memory** — Create GPath in window_load
+2. **Pre-allocate Memory** — Create GPath in window_load for static shapes (clock hands, fixed elements). Small dynamic shapes that change position each frame (e.g. character silhouettes at computed coordinates) can use create/destroy in draw functions — this is acceptable for paths with ~3-6 points
 3. **MINUTE_UNIT Only** — Never use SECOND_UNIT unless explicitly requested
 4. **Clean Resources** — Destroy in unload handlers
 5. **NULL Checks** — Verify pointers before use
