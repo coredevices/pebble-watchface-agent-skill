@@ -1,0 +1,17 @@
+{
+  "name": "pebble-watchface-marketplace",
+  "owner": {
+    "name": "dragid10"
+  },
+  "metadata": {
+    "description": "Pebble watchface generator skill for Claude Code"
+  },
+  "plugins": [
+    {
+      "name": "pebble-watchface",
+      "source": "./",
+      "description": "Generate complete Pebble smartwatch watchfaces, build PBW artifacts, and test in QEMU emulator",
+      "version": "1.0.0"
+    }
+  ]
+}

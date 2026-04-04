@@ -4,19 +4,25 @@ Generate complete, buildable Pebble smartwatch watchfaces using Claude Code with
 
 ## Get Started
 
+Install the skill as a Claude Code plugin from the marketplace:
+
 ```bash
-git clone https://github.com/coredevices/pebble-watchface-agent-skill
-cd pebble-watchface-agent-skill
-claude
+# Register the marketplace
+/plugin marketplace add coredevices/pebble-watchface-agent-skill
+
+# Install the plugin
+/plugin install pebble-watchface@pebble-watchface-marketplace
 ```
 
-Then just ask:
+Then in any project, just ask Claude to create a watchface — or invoke the skill directly with `/pebble-watchface`:
 
 ```
 Create an animated underwater watchface with fish and bubbles
 ```
 
 Claude automatically detects the skill and handles everything — design, code generation, build, emulator testing, and screenshot verification.
+
+For more details on plugin marketplaces, see the [Claude Code docs](https://code.claude.com/docs/en/discover-plugins#add-from-github).
 
 > **Requires:** [Claude Code](https://docs.anthropic.com/en/docs/claude-code) and the [Pebble SDK](https://developer.repebble.com/sdk/) installed.
 
@@ -70,9 +76,9 @@ Claude will automatically invoke the `pebble-watchface` skill and handle everyth
 │   ├── pebble-api-reference.md
 │   ├── animation-patterns.md
 │   └── drawing-guide.md
-├── samples/              # Working example watchfaces
-│   └── aqua-pbw/         # Animated aquarium watchface
 ├── scripts/              # Helper utilities
+│   ├── create_app_icons.py
+│   ├── create_preview_gif.py
 │   ├── create_project.py
 │   ├── generate_uuid.py
 │   └── validate_project.py
@@ -131,7 +137,10 @@ Complete Pebble C watchface tutorials are included in `tutorials/c-watchface-tut
 | Part | Topic | Key Concepts |
 |------|-------|--------------|
 | part1 | Basic time + date | Window, TextLayer, TickTimerService, system fonts |
+| part2 | Custom fonts | Font resources, custom font loading, layout positioning |
+| part3 | Battery + Bluetooth | Battery meter bar, BitmapLayer, connection monitoring, vibration alerts |
 | part4 | Weather data | AppMessage, PebbleKit JS, Open-Meteo API, XMLHttpRequest |
+| part5 | Unobstructed area | Quick View handling, dynamic UI repositioning |
 | part6 | User settings | Clay configuration, persistent storage, color pickers |
 
 ## Publishing
