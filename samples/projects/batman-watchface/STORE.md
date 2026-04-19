@@ -41,9 +41,6 @@ The Bat Signal shines tonight
 - Twinkling star animation
 - Multi-platform support (Aplite, Basalt, Chalk, Diorite)
 
-## Support
-Report issues at: https://github.com/anthropics/claude-code/issues
-
 ## Screenshots
 
 1. screenshot_basalt.png - Main color display showing beam and bat symbol
