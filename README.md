@@ -215,6 +215,7 @@ pebble install --phone
 - [Open-Meteo Weather API](https://open-meteo.com/en/docs)
 - [C Watchface Tutorial (source)](https://github.com/coredevices/c-watchface-tutorial)
 - [Claude Code Documentation](https://docs.anthropic.com/claude-code)
+- https://developer.repebble.com/llms.txt
 
 ## Acknowledgments
 
