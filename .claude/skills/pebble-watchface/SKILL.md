@@ -1,13 +1,42 @@
 ---
 name: pebble-watchface
-description: Generate complete Pebble smartwatch watchfaces, build PBW artifacts, and test in QEMU emulator. Use when creating watchfaces, Pebble apps, animated displays, clock faces. Produces ready-to-install PBW files and runs them in emulator.
+description: Generate complete Pebble smartwatch watchfaces AND watchapps (games, tools, web-API apps), in C or Alloy (JavaScript), build PBW artifacts, and test in QEMU emulator. Use when creating watchfaces, Pebble apps, animated displays, clock faces, watch games. Produces ready-to-install PBW files and runs them in emulator.
 ---
 
-# Pebble Watchface Generator
+# Pebble Watchface & Watchapp Generator
 
-Generate complete, buildable Pebble watchfaces with full PBW artifact output and QEMU testing.
+Generate complete, buildable Pebble watchfaces and watchapps with full PBW artifact output and QEMU testing.
 
 **Default target platform: Emery (Pebble Time 2, 200x228 color rectangular display).**
+
+## Step 0: Choose Project Type and Language
+
+Two decisions before anything else:
+
+### Watchface or Watchapp?
+
+| | Watchface | Watchapp |
+|---|---|---|
+| package.json | `"watchapp": {"watchface": true}` | `"watchapp": {"watchface": false}` |
+| Purpose | Passive time display | Interactive: games, tools, viewers |
+| Buttons | **None** (Up/Down = timeline, Select = launcher). Input = accelerometer tap only | Full click API: single/repeating/long/multi/raw |
+| Exit | System-controlled | BACK pops window stack; app exits when empty |
+| Update driver | Tick timer (MINUTE_UNIT) | Clicks + AppTimer loops (games ~33ms) |
+
+If the request involves buttons, menus, game input, or multiple screens → watchapp. Read [reference/watchapp-guide.md](reference/watchapp-guide.md) before implementing a watchapp.
+
+### C or Alloy (JavaScript)?
+
+**Alloy runs JS on the watch (Moddable XS). It supports ONLY emery and gabbro.** Read [reference/alloy-guide.md](reference/alloy-guide.md) before implementing anything in Alloy.
+
+| Prefer Alloy when... | Prefer C when... |
+|---|---|
+| Target is emery/gabbro only (the default) | Any older platform needed (aplite/basalt/chalk/diorite/flint) |
+| App is web-API-driven — watch-side `fetch()` is far simpler than AppMessage plumbing | Game/animation needing max performance or tight memory control |
+| Modern JS ergonomics wanted (async/await, localStorage, Date) | Needs MenuLayer/ActionBarLayer/system UI components (no Alloy equivalent) |
+| Quick iteration on display logic | Needs HealthService, App Glances, timeline, background workers |
+
+Default guidance: **watchfaces and web-API apps → Alloy; games and menu/list-driven apps → C.** If the user names a language, use it.
 
 ## CRITICAL: End-to-End Delivery
 
@@ -55,9 +84,11 @@ For animated watchfaces that use `app_timer_register()`, only run animations bri
 
 ---
 
-## Phase 1: Research [USE SUBAGENT]
+## Phase 1: Research [USE SUBAGENT — complex projects only]
 
-**Spawn a research subagent** using Agent tool with `subagent_type: "Explore"` to:
+**Skip subagents for simple projects.** If the request is covered by a template plus one reference doc (basic digital/analog face, single-screen app), read the template and relevant reference file directly and go straight to implementation. Spawn subagents only for complex projects: multi-screen apps, games with novel mechanics, heavy custom graphics, or unfamiliar API combinations.
+
+**For complex projects, spawn a research subagent** using Agent tool with `subagent_type: "Explore"` to:
 
 ### Gather Requirements
 Ask the user (use AskUserQuestion if unclear):
@@ -84,12 +115,14 @@ Also have subagent read relevant reference docs:
 - `reference/pebble-api-reference.md`
 - `reference/animation-patterns.md`
 - `reference/drawing-guide.md`
+- `reference/watchapp-guide.md` — if building a watchapp (buttons, menus, window stack, game loop)
+- `reference/alloy-guide.md` — if building in Alloy (JS)
 
 ---
 
-## Phase 2: Design [USE SUBAGENT]
+## Phase 2: Design [USE SUBAGENT — complex projects only]
 
-**Spawn a planning subagent** using Agent tool with `subagent_type: "Plan"` to:
+For simple projects, do the layout math below inline (it is mandatory either way). **For complex projects, spawn a planning subagent** using Agent tool with `subagent_type: "Plan"` to:
 
 ### Create Design Specification
 - Screen layout for **emery (200x228)** rectangular display
@@ -272,6 +305,39 @@ https://api.open-meteo.com/v1/forecast?latitude=LAT&longitude=LON&current=temper
 - Use `layer_get_bounds()` for screen dimensions — don't hardcode sizes
 - Register AppMessage callbacks BEFORE calling `app_message_open()`
 
+### Watchapp Differences (C)
+
+For watchapps (`"watchface": false`), see [reference/watchapp-guide.md](reference/watchapp-guide.md). Deltas from the watchface flow:
+- Add `window_set_click_config_provider()` — buttons work
+- Multi-screen: one Window per screen, push/pop on the window stack
+- Games: AppTimer loop at ~33ms calling `layer_mark_dirty()`, raw click subscriptions for held buttons, cancel timer in window disappear
+- MenuLayer/ScrollLayer call their own `*_set_click_config_onto_window()`
+- Save state with `persist_*` in window disappear
+- No MINUTE_UNIT constraint — apps redraw on input/timer, but still cancel timers when idle
+
+### Alloy Implementation (instead of C)
+
+For Alloy projects, see [reference/alloy-guide.md](reference/alloy-guide.md) — read it fully before writing files. Files:
+
+```
+project/
+├── package.json          # from templates/alloy-package.json.template — "projectType": "moddable"
+├── wscript               # SAME stock wscript as C projects (templates/wscript.template)
+├── src/c/mdbl.c          # verbatim from templates/alloy-mdbl.c — never modify
+├── src/embeddedjs/
+│   ├── main.js           # all watch logic — start from templates/alloy-watchface.js
+│   └── manifest.json     # from templates/alloy-manifest.json; register extra modules/fonts here
+└── src/pkjs/index.js     # ONLY if networking (pebbleproxy) or Clay settings
+```
+
+Key rules:
+- `targetPlatforms` must be `["emery"]` or `["emery", "gabbro"]` — nothing else
+- Watchface: `watch.addEventListener("minutechange", draw)` — fires immediately on registration, no separate initial draw
+- Watchapp buttons: `import Button from "pebble/button"` (apps only)
+- Networking: `pebble package install @moddable/pebbleproxy` + 3-line pkjs shim, then watch-side `fetch()` works
+- Animation: `setInterval(draw, 33)` for ~30fps; stop when done
+- Extra JS module files MUST be registered in manifest.json `modules`
+
 ---
 
 ## Phase 4: Build PBW
@@ -300,6 +366,19 @@ If build fails:
 
 **REQUIRED** — Must test AND visually verify before delivering.
 
+### Step 0: Start Log Capture (before install)
+
+`pebble logs` attached after launch misses startup output, streams forever, and block-buffers when redirected. Correct recipe — start BEFORE installing:
+
+```bash
+PYTHONUNBUFFERED=1 pebble logs --emulator emery > pebble-logs.txt 2>&1 &
+echo $! > .pebble-logs.pid
+```
+
+When done testing, kill it: `kill $(cat .pebble-logs.pid)` — otherwise the streamer leaks and later runs write into a truncated file alongside the old process, corrupting logs.
+
+Notes: an empty log file is normal for an app that doesn't log — it does not mean the attach failed. If this command boots the emulator, wait ~20s before `pebble install` (racing it causes `FileExistsError` on the emulator dir). Crash logs may only appear after relaunching the app.
+
 ### Step 1: Launch Emulator and Install
 ```bash
 # Primary test - emery (Pebble Time 2, 200x228 color)
@@ -308,10 +387,19 @@ pebble install --emulator emery
 
 Wait a few seconds for the watchface to load and render.
 
+### Emulator Hygiene (common failure modes)
+
+- **Screenshot shows a different app, an old watchface, or a crash dialog** → stale emulator state. Run `pebble kill && pebble wipe`, then reinstall. Do NOT debug your code based on a screenshot of someone else's app.
+- **Install on an already-running emulator can land on the launcher** with your app highlighted but not launched — looks like a crash but isn't. Fix: `pebble emu-button click select --emulator emery`.
+- **A crashed app also lands on the launcher** with the app highlighted. Distinguish by relaunching (click select) and watching the log file.
+- **`libpebble2.exceptions.TimeoutError` on install/screenshot** after a crash → emulator wedged. `pebble kill && pebble wipe`, reinstall.
+
 ### Step 2: Capture Screenshot (MANDATORY)
 ```bash
 pebble screenshot --no-open --emulator emery screenshot_emery.png
 ```
+
+`pebble screenshot` does NOT create directories — `mkdir -p` any output dir first or you get a raw `FileNotFoundError` traceback.
 
 ### Step 3: Visual Verification (MANDATORY)
 
@@ -365,9 +453,8 @@ If visual verification fails:
 7. **Repeat until ALL checks pass**
 
 ### Step 5: Check Logs for Errors
-```bash
-pebble logs --emulator emery
-```
+
+Read the log file captured in Step 0 (`pebble-logs.txt`). Don't run bare `pebble logs` — it streams forever and blocks.
 
 Look for:
 - APP_LOG errors
@@ -398,6 +485,11 @@ python3 /path/to/skills/pebble-watchface/scripts/create_preview_gif.py . --frame
 ```
 
 Creates `preview_emery.gif` (and other platforms if their emulators are running).
+
+**GIF caveats:**
+- The script captures **every running emulator**, including stale ones from other projects — kill emulators for platforms you don't target first (`pebble kill` and reinstall on your target), and delete any GIFs for non-target platforms.
+- A MINUTE_UNIT face produces a 1-frame static GIF (8 frames × 400ms never crosses a minute boundary; identical frames dedupe). That's expected — skip the GIF for static faces.
+- For games/interactive apps, start gameplay first (`pebble emu-button click select`) so frames capture live play, not the menu.
 
 ---
 
@@ -590,6 +682,8 @@ Complete working tutorial examples are in `tutorials/c-watchface-tutorial/`:
 
 These are sourced from [coredevices/c-watchface-tutorial](https://github.com/coredevices/c-watchface-tutorial).
 
+The Alloy equivalent is [coredevices/alloy-watchface-tutorial](https://github.com/coredevices/alloy-watchface-tutorial) (part1 basic Poco face → part2 custom fonts → part3 battery/BT → part4 weather via watch-side fetch → part5 Quick View → part6 Clay settings + localStorage). Its part1 is captured verbatim in `templates/alloy-*`.
+
 ---
 
 ## Subagent Summary
@@ -701,12 +795,20 @@ pebble emu-tap --emulator emery
 
 ## File Checklist
 
-Before building:
-- [ ] `package.json` with valid UUID and `"targetPlatforms": ["emery"]`
+Before building (C project):
+- [ ] `package.json` with valid UUID, `"targetPlatforms": ["emery"]`, and correct `watchapp.watchface` flag (true = face, false = app)
 - [ ] `wscript` with build config
 - [ ] `src/c/main.c` with complete code
 - [ ] `src/pkjs/index.js` (if weather/web data needed)
 - [ ] `resources/` directory exists
+
+Before building (Alloy project):
+- [ ] `package.json` with valid UUID, `"projectType": "moddable"`, `targetPlatforms` ⊆ [emery, gabbro], correct `watchapp.watchface` flag
+- [ ] `wscript` (stock template)
+- [ ] `src/c/mdbl.c` (verbatim boilerplate)
+- [ ] `src/embeddedjs/main.js` + `src/embeddedjs/manifest.json` (extra modules/fonts registered)
+- [ ] `src/pkjs/index.js` with pebbleproxy shim (if networking) / Clay (if settings)
+- [ ] `@moddable/pebbleproxy` installed via `pebble package install` (if networking)
 
 Build: `pebble build`
 Test: `pebble install --emulator emery`

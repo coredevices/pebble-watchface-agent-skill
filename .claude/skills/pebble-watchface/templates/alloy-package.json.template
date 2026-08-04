@@ -1,0 +1,19 @@
+{
+  "name": "PROJECT_NAME",
+  "author": "AUTHOR_NAME",
+  "version": "1.0.0",
+  "keywords": ["pebble-app"],
+  "private": true,
+  "dependencies": {},
+  "pebble": {
+    "displayName": "DISPLAY_NAME",
+    "uuid": "GENERATE-NEW-UUID-HERE",
+    "projectType": "moddable",
+    "sdkVersion": "3",
+    "enableMultiJS": true,
+    "targetPlatforms": ["emery"],
+    "watchapp": { "watchface": true },
+    "messageKeys": [],
+    "resources": { "media": [] }
+  }
+}

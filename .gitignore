@@ -992,3 +992,6 @@ samples/projects/tumbling-monkeys/.home/.npm/_cacache/index-v5/fe/ff/10f9f1fa94a
 samples/projects/tumbling-monkeys/.home/.npm/_cacache/index-v5/ff/b4/82251a6a025226e5c6c812f2f8005a44e29efaba13ebcee1998faeed5c27
 samples/projects/tumbling-monkeys/.home/.npm/_cacache/index-v5/ff/e7/0331bb98321ab6e00b2e15d154752baf8224650da786625e03b4d12c0962
 .gitignore
+
+# Local skill-test projects (not for repo)
+examples-test/

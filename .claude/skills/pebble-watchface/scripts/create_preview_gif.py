@@ -20,6 +20,7 @@ Requires: Pillow, pebble SDK installed
 
 import sys
 import os
+import json
 import subprocess
 import time
 import argparse
@@ -99,7 +100,18 @@ def create_preview_gifs(project_dir: str = ".", num_frames: int = 10, frame_dela
     """Create animated GIF previews for all platforms"""
 
     project_path = Path(project_dir)
+
+    # Only capture the project's own target platforms — other running
+    # emulators may be showing unrelated apps from earlier sessions.
     platforms = ["emery", "basalt", "aplite", "chalk"]
+    pkg = project_path / "package.json"
+    if pkg.exists():
+        try:
+            targets = json.loads(pkg.read_text()).get("pebble", {}).get("targetPlatforms")
+            if targets:
+                platforms = targets
+        except (json.JSONDecodeError, OSError):
+            pass
 
     print(f"Creating preview GIFs with {num_frames} frames each...")
     print(f"Frame capture delay: {frame_delay_ms}ms")
