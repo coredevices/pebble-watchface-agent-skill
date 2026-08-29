@@ -78,7 +78,7 @@ For animated watchfaces that use `app_timer_register()`, only run animations bri
 | chalk | Pebble Time Round | 180x180 | Round | 64-color |
 | aplite | Pebble Classic | 144x168 | Rect | B&W |
 | diorite | Pebble 2 | 144x168 | Rect | B&W |
-| flint | Pebble 2 Duo | 144x168 | Rect | 64-color |
+| flint | Pebble 2 Duo | 144x168 | Rect | B&W |
 
 **Emery is the default and exclusive target.** If the user wants gabbro (round) support, that should be a second pass after the emery version is finalized.
 
@@ -723,7 +723,7 @@ The Alloy equivalent is [coredevices/alloy-watchface-tutorial](https://github.co
 | chalk    | 180x180    | Round | 64-color |
 | aplite   | 144x168    | Rect  | B&W |
 | diorite  | 144x168    | Rect  | B&W |
-| flint    | 144x168    | Rect  | 64-color |
+| flint    | 144x168    | Rect  | B&W |
 
 ### Key APIs
 ```c

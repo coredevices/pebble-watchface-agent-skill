@@ -109,7 +109,7 @@ Claude will automatically invoke the `pebble-watchface` skill and handle everyth
 | chalk | Pebble Time Round | Round | 180x180 | 64 colors |
 | aplite | Pebble Classic | Rectangular | 144x168 | B&W |
 | diorite | Pebble 2 | Rectangular | 144x168 | B&W |
-| flint | Pebble 2 Duo | Rectangular | 144x168 | 64 colors |
+| flint | Pebble 2 Duo | Rectangular | 144x168 | B&W |
 
 **Emery is the default target.** Gabbro (round) support can be added as a second pass.
 

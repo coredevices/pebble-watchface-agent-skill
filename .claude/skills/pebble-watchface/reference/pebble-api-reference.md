@@ -32,7 +32,7 @@ GColorBlack
 GColorWhite
 GColorClear  // Transparent
 
-// Color display colors (basalt, chalk, emery, gabbro, flint)
+// Color display colors (basalt, chalk, emery, gabbro)
 GColorRed, GColorGreen, GColorBlue
 GColorYellow, GColorCyan, GColorMagenta
 GColorOrange, GColorPurple, GColorPink
@@ -487,9 +487,9 @@ APP_LOG(APP_LOG_LEVEL_ERROR, "Error!");
 
 ```c
 #ifdef PBL_COLOR
-    // Color display (basalt, chalk, emery, gabbro, flint)
+    // Color display (basalt, chalk, emery, gabbro)
 #else
-    // Black and white (aplite, diorite)
+    // Black and white (aplite, diorite, flint)
 #endif
 
 #ifdef PBL_ROUND
