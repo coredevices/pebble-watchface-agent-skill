@@ -1,6 +1,12 @@
 ---
 name: pebble-watchface
 description: Generate complete Pebble smartwatch watchfaces AND watchapps (games, tools, web-API apps), in C or Alloy (JavaScript), build PBW artifacts, and test in QEMU emulator. Use when creating watchfaces, Pebble apps, animated displays, clock faces, watch games. Produces ready-to-install PBW files and runs them in emulator.
+compatibility: Requires the Pebble SDK and the pebble tool (SDK 4.33.1 or later), Python 3 with Pillow for icon and GIF scripts
+metadata:
+  author: coredevices
+  sdk-version: "4.33.1"
+  pebble-tool-version: "5.0.40"
+  source: https://github.com/coredevices/pebble-watchface-agent-skill
 ---
 
 # Pebble Watchface & Watchapp Generator
@@ -60,6 +66,24 @@ Every watchface request follows this complete flow:
 - Visual verification confirms it looks correct
 - User receives the final artifacts
 
+## Verify Your Work
+
+Run this loop after every code change. Details for each step are in Phase 4 and Phase 5.
+
+```bash
+pebble build                                                  # compile; fix errors before going on
+pebble install --emulator emery                               # boots the emulator if needed, installs, launches
+pebble screenshot --no-open --emulator emery shot.png         # then view shot.png with the Read tool
+pebble emu-button click select --emulator emery               # press a button (back, up, select, down)
+pebble logs --emulator emery                                  # streams APP_LOG output; run in background, see Phase 5 Step 0
+```
+
+`pebble screenshot --all-platforms` builds and screenshots every platform in `targetPlatforms`; use it before publishing a multi-platform app. There is no `--scale` flag.
+
+## API Documentation
+
+Do not write API calls from memory. [references/live-docs.md](references/live-docs.md) lists the Markdown URL for every API area used by this skill; fetch the page when you need a signature, enum, or platform note. The full index is https://developer.repebble.com/llms.txt, and any page on developer.repebble.com has a Markdown twin at the same URL with `.md` appended.
+
 ## CRITICAL: Battery Efficiency
 
 **ALWAYS use `MINUTE_UNIT` for `tick_timer_service_subscribe()`.** NEVER use `SECOND_UNIT` unless the user explicitly requests a seconds display. `SECOND_UNIT` causes the watchface to redraw every second, which drastically reduces battery life. Design all watchfaces to update on minute boundaries.
@@ -99,9 +123,9 @@ Ask the user (use AskUserQuestion if unclear):
 
 ### Study Existing Code
 The subagent should read and analyze:
-- `samples/aqua-pbw/src/c/main.c` — animated watchface patterns
-- `tutorials/c-watchface-tutorial/part1/` — basic time + date
-- `tutorials/c-watchface-tutorial/part4/` — weather via AppMessage + pkjs
+- [templates/animated-watchface.c](templates/animated-watchface.c) — animated watchface patterns
+- https://developer.repebble.com/tutorials/watchface-tutorial/part1.md — basic time + date
+- https://developer.repebble.com/tutorials/watchface-tutorial/part4.md — weather via AppMessage + pkjs
 
 Key patterns to extract:
 - Data structures for animated elements
@@ -112,7 +136,7 @@ Key patterns to extract:
 - Weather/AppMessage communication (if needed)
 
 Also have subagent read relevant reference docs:
-- `references/pebble-api-reference.md`
+- `references/live-docs.md` — URLs of the live API pages; fetch the ones the project needs
 - `references/animation-patterns.md`
 - `references/drawing-guide.md`
 - `references/watchapp-guide.md` — if building a watchapp (buttons, menus, window stack, game loop)
@@ -399,6 +423,8 @@ Wait a few seconds for the watchface to load and render.
 pebble screenshot --no-open --emulator emery screenshot_emery.png
 ```
 
+For a multi-platform project, `pebble screenshot --no-open --all-platforms` builds, installs and screenshots every platform in `targetPlatforms` in one run.
+
 `pebble screenshot` does NOT create directories — `mkdir -p` any output dir first or you get a raw `FileNotFoundError` traceback.
 
 ### Step 3: Visual Verification (MANDATORY)
@@ -629,7 +655,7 @@ Pebble.addEventListener('appmessage', function(e) {
 });
 ```
 
-See `tutorials/c-watchface-tutorial/part4/` for a complete working example.
+See https://developer.repebble.com/tutorials/watchface-tutorial/part4.md for a complete working example.
 
 ### Visual Weather Reactions (C Side)
 
@@ -672,7 +698,7 @@ This gives a different scene each minute without burning battery on sub-second r
 
 ## Tutorial Reference
 
-Complete working tutorial examples are in `tutorials/c-watchface-tutorial/`:
+The C watchface tutorial is at https://developer.repebble.com/tutorials/watchface-tutorial/part1.md through `part6.md`:
 
 | Part | What It Teaches |
 |------|-----------------|
@@ -680,7 +706,7 @@ Complete working tutorial examples are in `tutorials/c-watchface-tutorial/`:
 | part4 | Weather via AppMessage + PebbleKit JS + Open-Meteo API |
 | part6 | User settings via Clay configuration framework |
 
-These are sourced from [coredevices/c-watchface-tutorial](https://github.com/coredevices/c-watchface-tutorial).
+The source is at [coredevices/c-watchface-tutorial](https://github.com/coredevices/c-watchface-tutorial), and a copy is in `tutorials/c-watchface-tutorial/` when this skill is used from a clone of its repository.
 
 The Alloy equivalent is [coredevices/alloy-watchface-tutorial](https://github.com/coredevices/alloy-watchface-tutorial) (part1 basic Poco face → part2 custom fonts → part3 battery/BT → part4 weather via watch-side fetch → part5 Quick View → part6 Clay settings + localStorage). Its part1 is captured verbatim in `templates/alloy-*`.
 

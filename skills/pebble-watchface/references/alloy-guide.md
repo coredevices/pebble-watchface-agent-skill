@@ -1,5 +1,7 @@
 # Alloy (JavaScript) Guide
 
+> API signatures below are a working subset. For the full API, fetch the live pages listed in [live-docs.md](live-docs.md) (start at https://developer.repebble.com/guides/alloy/getting-started.md).
+
 Alloy is Pebble's JavaScript framework: JS runs **on the watch** via the Moddable XS engine (ES6+/ES2025, strict mode, frozen primordials, no `eval`/`Function`). Marked by `"projectType": "moddable"` in package.json.
 
 **Platform support: emery and gabbro ONLY.** Any other target platform requires C.

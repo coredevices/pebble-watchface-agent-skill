@@ -1,5 +1,7 @@
 # Watchapp Guide (C)
 
+> API signatures below are a working subset. For the full API, fetch the live pages listed in [live-docs.md](live-docs.md) (start at https://developer.repebble.com/docs/c/User_Interface/Clicks/index.md).
+
 Watchapps differ from watchfaces in one config flag plus interaction model. Build, wscript, emulator flow all identical.
 
 ## Config Difference

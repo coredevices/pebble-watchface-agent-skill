@@ -264,7 +264,7 @@ def main():
         print("\nNext steps:")
         print(f"  1. cd {project_path}")
         print("  2. pebble build")
-        print("  3. pebble install --emulator basalt")
+        print("  3. pebble install --emulator emery")
         sys.exit(0)
 
 
