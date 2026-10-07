@@ -784,8 +784,8 @@ pebble build                                              # Build PBW
 pebble install --emulator emery                           # Test in QEMU
 pebble logs --emulator emery                              # View logs
 pebble screenshot --no-open --emulator emery              # Capture screen
-python3 scripts/create_preview_gif.py . --frames 8          # Capture preview GIFs
-python3 scripts/create_app_icons.py .                       # Generate app icons
+python3 /path/to/skills/pebble-watchface/scripts/create_preview_gif.py . --frames 8   # Capture preview GIFs (scripts live in the installed skill)
+python3 /path/to/skills/pebble-watchface/scripts/create_app_icons.py .                 # Generate app icons
 pebble install --cloudpebble                              # Deploy to device
 pebble login                                              # Login for publishing
 pebble publish                                            # Publish to App Store

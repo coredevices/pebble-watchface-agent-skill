@@ -40,7 +40,9 @@ mkdir -p ~/.claude/skills
 cp -r /path/to/pebble-watchface-agent-skill/skills/pebble-watchface ~/.claude/skills/
 ```
 
-Claude Code picks up new skills without a restart. Skills are
+Claude Code picks up changes to an existing skills directory without a
+restart. If `.claude/skills` did not exist when the session started,
+run `/reload-skills` or start a new session after copying. Skills are
 documented at https://code.claude.com/docs/en/skills.
 
 ### Cursor
@@ -102,6 +104,12 @@ git clone https://github.com/coredevices/pebble-watchface-agent-skill
 cd pebble-watchface-agent-skill
 claude
 ```
+
+On Windows, Git with `core.symlinks=false` (the default) checks the two
+symlinks out as text files, so agents will not find `SKILL.md`. Either
+run `git config --global core.symlinks true` before cloning, or delete
+the two placeholder files and copy `skills/pebble-watchface` into
+`.claude/skills/` (or `.agents/skills/`).
 
 ## Usage
 
