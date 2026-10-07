@@ -23,11 +23,11 @@ Two decisions before anything else:
 | Exit | System-controlled | BACK pops window stack; app exits when empty |
 | Update driver | Tick timer (MINUTE_UNIT) | Clicks + AppTimer loops (games ~33ms) |
 
-If the request involves buttons, menus, game input, or multiple screens → watchapp. Read [reference/watchapp-guide.md](reference/watchapp-guide.md) before implementing a watchapp.
+If the request involves buttons, menus, game input, or multiple screens → watchapp. Read [references/watchapp-guide.md](references/watchapp-guide.md) before implementing a watchapp.
 
 ### C or Alloy (JavaScript)?
 
-**Alloy runs JS on the watch (Moddable XS). It supports ONLY emery and gabbro.** Read [reference/alloy-guide.md](reference/alloy-guide.md) before implementing anything in Alloy.
+**Alloy runs JS on the watch (Moddable XS). It supports ONLY emery and gabbro.** Read [references/alloy-guide.md](references/alloy-guide.md) before implementing anything in Alloy.
 
 | Prefer Alloy when... | Prefer C when... |
 |---|---|
@@ -112,11 +112,11 @@ Key patterns to extract:
 - Weather/AppMessage communication (if needed)
 
 Also have subagent read relevant reference docs:
-- `reference/pebble-api-reference.md`
-- `reference/animation-patterns.md`
-- `reference/drawing-guide.md`
-- `reference/watchapp-guide.md` — if building a watchapp (buttons, menus, window stack, game loop)
-- `reference/alloy-guide.md` — if building in Alloy (JS)
+- `references/pebble-api-reference.md`
+- `references/animation-patterns.md`
+- `references/drawing-guide.md`
+- `references/watchapp-guide.md` — if building a watchapp (buttons, menus, window stack, game loop)
+- `references/alloy-guide.md` — if building in Alloy (JS)
 
 ---
 
@@ -307,7 +307,7 @@ https://api.open-meteo.com/v1/forecast?latitude=LAT&longitude=LON&current=temper
 
 ### Watchapp Differences (C)
 
-For watchapps (`"watchface": false`), see [reference/watchapp-guide.md](reference/watchapp-guide.md). Deltas from the watchface flow:
+For watchapps (`"watchface": false`), see [references/watchapp-guide.md](references/watchapp-guide.md). Deltas from the watchface flow:
 - Add `window_set_click_config_provider()` — buttons work
 - Multi-screen: one Window per screen, push/pop on the window stack
 - Games: AppTimer loop at ~33ms calling `layer_mark_dirty()`, raw click subscriptions for held buttons, cancel timer in window disappear
@@ -317,7 +317,7 @@ For watchapps (`"watchface": false`), see [reference/watchapp-guide.md](referenc
 
 ### Alloy Implementation (instead of C)
 
-For Alloy projects, see [reference/alloy-guide.md](reference/alloy-guide.md) — read it fully before writing files. Files:
+For Alloy projects, see [references/alloy-guide.md](references/alloy-guide.md) — read it fully before writing files. Files:
 
 ```
 project/
