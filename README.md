@@ -1,8 +1,101 @@
-# Pebble Watchface Generator Skill
+# Pebble watchface and watchapp skill
 
-Generate complete, buildable Pebble smartwatch watchfaces using Claude Code with full PBW artifact output and QEMU emulator testing.
+An [Agent Skill](https://agentskills.io) that teaches a coding agent to
+build Pebble watchfaces and watchapps: design the layout, write the
+project files (C or Alloy), run `pebble build`, install the result on
+the emulator, screenshot it, check the screenshot, and fix what is
+wrong. It also covers icons, preview GIFs, and publishing to the Pebble
+App Store with `pebble publish`.
 
-## Get Started
+The skill is in `skills/pebble-watchface/`. It works with Claude Code,
+Cursor, Codex, and any other agent that reads `SKILL.md` files.
+
+Last checked against SDK 4.33.1 and pebble tool 5.0.40.
+
+## Requirements
+
+- The Pebble SDK and the `pebble` tool. Install them by following
+  https://developer.repebble.com/sdk. The emulator (QEMU) comes with
+  the SDK.
+- Python 3 with Pillow (`pip install Pillow`) for the icon and GIF
+  scripts.
+- A coding agent that supports Agent Skills.
+
+## Install
+
+Pick the agent you use. Each one reads the same `SKILL.md`.
+
+### Claude Code
+
+Copy the skill directory into your project or into your home
+directory:
+
+```bash
+# project only
+mkdir -p .claude/skills
+cp -r /path/to/pebble-watchface-agent-skill/skills/pebble-watchface .claude/skills/
+
+# every project
+mkdir -p ~/.claude/skills
+cp -r /path/to/pebble-watchface-agent-skill/skills/pebble-watchface ~/.claude/skills/
+```
+
+Claude Code picks up new skills without a restart. Skills are
+documented at https://code.claude.com/docs/en/skills.
+
+### Cursor
+
+Cursor reads skills from `.cursor/skills/` or `.agents/skills/` in the
+project and from `~/.cursor/skills/` or `~/.agents/skills/` for every
+project. It also reads `.claude/skills/`.
+
+```bash
+mkdir -p .cursor/skills
+cp -r /path/to/pebble-watchface-agent-skill/skills/pebble-watchface .cursor/skills/
+```
+
+See https://cursor.com/docs/context/skills.
+
+### Codex
+
+Codex reads skills from `.agents/skills/` in the repository and from
+`~/.agents/skills/` for every project.
+
+```bash
+mkdir -p .agents/skills
+cp -r /path/to/pebble-watchface-agent-skill/skills/pebble-watchface .agents/skills/
+```
+
+Codex also has a built-in `$skill-installer` that can fetch a skill
+from a repository. See https://developers.openai.com/codex/skills.
+
+### Agents that read AGENTS.md
+
+If your agent does not load skills on its own, copy the skill directory
+somewhere in the project and add a line to `AGENTS.md`:
+
+```markdown
+When building a Pebble watchface or watchapp, read
+.agents/skills/pebble-watchface/SKILL.md first and follow it.
+```
+
+### With the `skills` CLI
+
+The community `skills` CLI from Vercel Labs installs a skill from a
+GitHub repository into the right directory for 75+ agents, including
+the three above:
+
+```bash
+npx skills add coredevices/pebble-watchface-agent-skill
+```
+
+See https://github.com/vercel-labs/skills.
+
+### Or clone this repository
+
+`.claude/skills/pebble-watchface` and `.agents/skills/pebble-watchface`
+are symlinks to `skills/pebble-watchface`, so running your agent inside
+a clone of this repository also works:
 
 ```bash
 git clone https://github.com/coredevices/pebble-watchface-agent-skill
@@ -10,217 +103,109 @@ cd pebble-watchface-agent-skill
 claude
 ```
 
-Then just ask:
+## Usage
+
+Describe what you want:
 
 ```
 Create an animated underwater watchface with fish and bubbles
 ```
 
-Claude automatically detects the skill and handles everything — design, code generation, build, emulator testing, and screenshot verification.
-
-> **Requires:** [Claude Code](https://docs.anthropic.com/en/docs/claude-code) and the [Pebble SDK](https://developer.repebble.com/sdk/) installed.
-
-## What This Does
-
-This repository contains a **Claude Code skill** that transforms natural language descriptions into fully functional Pebble watchfaces. Simply describe what you want, and Claude will:
-
-1. **Design** the watchface architecture
-2. **Generate** all source files (C code, package.json, wscript, pkjs)
-3. **Build** a ready-to-install `.pbw` file
-4. **Test** in the QEMU emulator
-5. **Verify** visually with screenshots
-6. **Deliver** the final artifacts with rollover GIFs
-7. **Publish** to the Pebble App Store (optional)
-
-**Default target: Emery (Pebble Time 2, 200x228 color rectangular display).**
-
-## Prerequisites
-
-Before using this skill, ensure you have:
-
-- **Claude Code CLI** installed and configured
-- **Pebble SDK** Follow the instructions in the official [documentation](https://developer.repebble.com/sdk/)
-- **QEMU** for emulator testing (bundled with Pebble SDK)
-- **Python 3** with Pillow (`pip install Pillow`) for icon and GIF generation
-
-## Example Prompts
-
-Here are some things you can ask for:
-
 ```
-Create a retro digital watchface with a neon green display on black background
+Make a watchapp that shows a countdown timer and vibrates at zero
 ```
 
-Or with weather:
+The agent follows `SKILL.md`: it picks watchface or watchapp, C or
+Alloy, writes the files, builds, installs on the emery emulator, takes
+a screenshot, looks at it, and iterates. You get `build/<name>.pbw`,
+`screenshot_emery.png`, and, for animated faces, `preview_emery.gif`.
+
+Install the result on a watch with `pebble install --phone <ip>` or
+`pebble install --cloudpebble`. Publish with `pebble login` then
+`pebble publish`.
+
+## What the skill covers
+
+- Watchfaces and watchapps, in C or in Alloy (JavaScript on the watch,
+  emery and gabbro only).
+- Emery (Pebble Time 2, 200x228) as the default target. Other platforms:
+  gabbro (Pebble Round 2), flint (Pebble 2 Duo), basalt, chalk, aplite,
+  diorite.
+- Layout planning so nothing is cropped, `MINUTE_UNIT` ticks for
+  battery life, fixed-point math, resource cleanup.
+- Weather and other web data through PebbleKit JS (C) or `fetch()`
+  (Alloy), using the Open-Meteo API.
+- The emulator loop: `pebble build`, `pebble install --emulator emery`,
+  `pebble screenshot --no-open`, `pebble emu-button`, `pebble logs`,
+  and how to recover when the emulator is in a bad state.
+- App icons, preview GIFs, and `pebble publish`.
+
+Layout:
 
 ```
-Make a watchface that shows the time, date, and current weather conditions
-```
-
-Claude will automatically invoke the `pebble-watchface` skill and handle everything from design to delivery.
-
-## How the Skill Works
-
-### Skill Location
-
-```
-.claude/skills/pebble-watchface/
-├── SKILL.md              # Main skill definition
-├── reference/            # API documentation
-│   ├── pebble-api-reference.md
+skills/pebble-watchface/
+├── SKILL.md                 # the workflow
+├── references/
+│   ├── live-docs.md         # URLs of the API pages on developer.repebble.com
+│   ├── alloy-guide.md       # Alloy project anatomy, Poco, sensors, networking, pitfalls
+│   ├── watchapp-guide.md    # buttons, window stack, menus, game loop
 │   ├── animation-patterns.md
 │   └── drawing-guide.md
-├── samples/              # Working example watchfaces
-│   └── aqua-pbw/         # Animated aquarium watchface
-├── scripts/              # Helper utilities
-│   ├── create_project.py
-│   ├── generate_uuid.py
-│   └── validate_project.py
-└── templates/            # Code templates
-    ├── animated-watchface.c
-    ├── static-watchface.c
-    ├── weather-watchface.c
-    ├── pkjs-weather.js
-    ├── package.json.template
-    └── wscript.template
+├── scripts/
+│   ├── create_project.py    # scaffold a C project from a template
+│   ├── validate_project.py  # check package.json, wscript, sources
+│   ├── create_app_icons.py  # 80x80 and 144x144 icons from a screenshot
+│   ├── create_preview_gif.py
+│   └── generate_uuid.py
+└── templates/               # C and Alloy starting points, package.json, wscript
 ```
 
-### The Workflow
+API reference is not bundled. `references/live-docs.md` points at the
+Markdown version of each page on https://developer.repebble.com (append
+`.md` to any page URL) and at https://developer.repebble.com/llms.txt,
+so the agent reads current documentation instead of a copy.
 
-| Phase | What Happens |
-|-------|--------------|
-| **1. Research** | Gathers requirements, studies sample code and tutorials |
-| **2. Design** | Plans layout for emery (200x228), animations, data structures |
-| **3. Implement** | Writes all project files (main.c, package.json, wscript, pkjs) |
-| **4. Build** | Runs `pebble build` to generate the PBW |
-| **5. Test** | Installs in QEMU, captures screenshots |
-| **6. Iterate** | Fixes issues until visual verification passes |
-| **7. Assets** | Generates icons and preview GIFs via helper scripts |
-| **8. Deliver** | Reports PBW location with screenshots and GIFs |
-| **9. Publish** | Publishes to Pebble App Store via `pebble publish` (optional) |
+The `samples/projects/` and `tutorials/` directories hold complete
+projects built with this skill and the source of the C watchface
+tutorial. They are for reading; the skill does not depend on them.
 
-### Supported Platforms
+## Updating
 
-| Platform | Model | Display | Resolution | Colors |
-|----------|-------|---------|------------|--------|
-| **emery** | **Pebble Time 2** | **Rectangular** | **200x228** | **64 colors** |
-| gabbro | Pebble Round 2 | Round | 260x260 | 64 colors |
-| basalt | Pebble Time | Rectangular | 144x168 | 64 colors |
-| chalk | Pebble Time Round | Round | 180x180 | 64 colors |
-| aplite | Pebble Classic | Rectangular | 144x168 | B&W |
-| diorite | Pebble 2 | Rectangular | 144x168 | B&W |
-| flint | Pebble 2 Duo | Rectangular | 144x168 | 64 colors |
-
-**Emery is the default target.** Gabbro (round) support can be added as a second pass.
-
-## Weather Watchfaces
-
-The skill supports watchfaces that display weather and other web data using the **AppMessage + PebbleKit JS** pattern:
-
-- Watch C code communicates with phone-side JavaScript via AppMessage
-- PebbleKit JS (`src/pkjs/index.js`) fetches data from web APIs
-- Uses [Open-Meteo API](https://open-meteo.com/) (free, no API key needed)
-- Weather refreshes every 30 minutes for battery efficiency
-
-See `tutorials/c-watchface-tutorial/part4/` for a complete working example.
-
-## Tutorial Source Code
-
-Complete Pebble C watchface tutorials are included in `tutorials/c-watchface-tutorial/`, sourced from [coredevices/c-watchface-tutorial](https://github.com/coredevices/c-watchface-tutorial):
-
-| Part | Topic | Key Concepts |
-|------|-------|--------------|
-| part1 | Basic time + date | Window, TextLayer, TickTimerService, system fonts |
-| part4 | Weather data | AppMessage, PebbleKit JS, Open-Meteo API, XMLHttpRequest |
-| part6 | User settings | Clay configuration, persistent storage, color pickers |
-
-## Publishing
-
-Publish directly to the Pebble App Store:
-
-```bash
-# Login (one-time, opens browser)
-pebble login
-
-# Publish (interactive — prompts for details)
-pebble publish
-
-# Or non-interactive
-pebble publish --non-interactive --description "My watchface"
-```
-
-## Output Artifacts
-
-After successful generation, you'll receive:
-
-```
-your-watchface/
-├── build/
-│   └── your-watchface.pbw    # Ready-to-install watchface
-├── src/c/
-│   └── main.c                # Generated C source code
-├── src/pkjs/
-│   └── index.js              # Phone-side JS (if weather/web data)
-├── package.json              # Pebble project manifest
-├── wscript                   # Build configuration
-├── screenshots/              # Captured by pebble screenshot
-│   ├── emery_*.png           # Static screenshots
-│   └── emery_*.gif           # Rollover GIFs
-└── screenshot_emery.png      # Verification screenshot
-```
-
-## Installing Your Watchface
-
-### On Emulator
-```bash
-cd your-watchface
-pebble install --emulator emery
-```
-
-### On Physical Watch
-```bash
-pebble install --phone
-```
-
-## Key Technical Constraints
-
-1. **No Floating Point** — Uses `sin_lookup()`/`cos_lookup()` for trigonometry
-2. **MINUTE_UNIT Updates** — Always uses minute-based tick updates for battery efficiency
-3. **Pre-allocated Memory** — Creates GPaths in `window_load`
-4. **Dynamic Bounds** — Uses `layer_get_bounds()` instead of hardcoded screen sizes
-5. **Resource Cleanup** — Properly destroys all resources in unload handlers
+Pull the repository and copy `skills/pebble-watchface` over your
+installed copy, or run `npx skills add` again. The SDK version the
+skill was last checked against is in the `metadata` block at the top of
+`SKILL.md`; after an SDK release, check
+https://developer.repebble.com/sdk/changelogs for changes to commands
+or APIs the skill uses.
 
 ## Troubleshooting
 
-### Build Fails
-- Check for syntax errors in the generated C code
-- Verify `pebble-sdk` is properly installed
-- Ensure all required files exist (package.json, wscript, src/c/main.c)
+- `pebble build` fails: read the compiler error, fix `src/c/main.c`,
+  build again. Make sure `package.json`, `wscript`, and `src/c/main.c`
+  exist.
+- The emulator does not start: run `pebble kill`, then
+  `pebble install --emulator emery` again. If it is still wedged,
+  `pebble wipe` clears emulator state.
+- The screenshot shows a different app: the emulator kept state from an
+  earlier project. `pebble kill && pebble wipe`, then reinstall.
+- GIF or icon scripts fail: install Pillow, and make sure the emulator
+  is running before `create_preview_gif.py`.
 
-### Emulator Won't Start
-- Run `pebble sdk install-emulator emery` to install emulator
-- Check QEMU is installed: `which qemu-system-arm`
+## Links
 
-### GIF Capture Fails
-- Ensure Pillow is installed: `pip install Pillow`
-- Make sure the emulator is running before running `create_preview_gif.py`
-
-### Watchface Looks Wrong
-- The skill includes visual verification — it will iterate until correct
-- If issues persist, provide specific feedback about what's wrong
-
-## Resources
-
-- [Pebble SDK Documentation](https://developer.repebble.com/)
-- [Open-Meteo Weather API](https://open-meteo.com/en/docs)
-- [C Watchface Tutorial (source)](https://github.com/coredevices/c-watchface-tutorial)
-- [Claude Code Documentation](https://docs.anthropic.com/claude-code)
-- https://developer.repebble.com/llms.txt
+- Developer documentation: https://developer.repebble.com
+- Markdown index for agents: https://developer.repebble.com/llms.txt
+- The `pebble` tool: https://developer.repebble.com/guides/tools-and-resources/pebble-tool
+- Agent Skills specification: https://agentskills.io/specification
+- C watchface tutorial source: https://github.com/coredevices/c-watchface-tutorial
 
 ## Acknowledgments
 
-This skill is derived from the excellent [pebble-wf-agent-skill](https://github.com/priyankark/pebble-wf-agent-skill) by [priyankark](https://github.com/priyankark).
+This skill started from
+[pebble-wf-agent-skill](https://github.com/priyankark/pebble-wf-agent-skill)
+by [priyankark](https://github.com/priyankark).
 
 ## License
 
-This skill and associated templates are provided for creating Pebble watchfaces. Individual watchfaces you create are your own.
+The skill and templates are provided for creating Pebble watchfaces
+and watchapps. Watchfaces and apps you create with it are your own.
