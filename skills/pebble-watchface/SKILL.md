@@ -78,7 +78,9 @@ pebble emu-button click select --emulator emery               # press a button (
 pebble logs --emulator emery                                  # streams APP_LOG output; run in background, see Phase 5 Step 0
 ```
 
-`pebble screenshot --all-platforms` builds and screenshots every platform in `targetPlatforms`; use it before publishing a multi-platform app. There is no `--scale` flag.
+`pebble screenshot --all-platforms` builds and screenshots every platform in `targetPlatforms`; use it before publishing a multi-platform app. `--scale N` (integer upscale, also applied to GIF output) exists in pebble-tool releases that include https://github.com/coredevices/pebble-tool/pull/89; older versions reject it, so if the flag errors, use `--no-open` alone.
+
+If the emulator misbehaves, `pebble kill` stops it and `pebble wipe` clears its stored data; then run `pebble install --emulator emery` again.
 
 ## API Documentation
 
