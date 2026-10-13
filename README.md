@@ -10,13 +10,18 @@ App Store with `pebble publish`.
 The skill is in `skills/pebble-watchface/`. It works with Claude Code,
 Cursor, Codex, and any other agent that reads `SKILL.md` files.
 
+A second skill, `skills/pebble-emulator/`, installs and runs the
+emulator on macOS Apple Silicon and pairs it with the Core Devices app
+on an Android emulator. See [Emulator on macOS](#emulator-on-macos).
+
 Last checked against SDK 4.33.1 and pebble tool 5.0.40.
 
 ## Requirements
 
 - The Pebble SDK and the `pebble` tool. Install them by following
-  https://developer.repebble.com/sdk. The emulator (QEMU) comes with
-  the SDK.
+  https://developer.repebble.com/sdk. On Linux the emulator (QEMU)
+  comes with the SDK. On macOS Apple Silicon it does not: see
+  [Emulator on macOS](#emulator-on-macos).
 - Python 3 with Pillow (`pip install Pillow`) for the icon and GIF
   scripts.
 - A coding agent that supports Agent Skills.
@@ -177,6 +182,45 @@ The `samples/projects/` and `tutorials/` directories hold complete
 projects built with this skill and the source of the C watchface
 tutorial. They are for reading; the skill does not depend on them.
 
+## Emulator on macOS
+
+On macOS Apple Silicon, `pebble install --emulator` fails with
+`No such file or directory: 'qemu-pebble'` because `pebble sdk install`
+does not include the emulator. The `pebble-emulator` skill covers the
+fix and the rest of the emulator workflow:
+
+- `scripts/setup-macos.sh` installs the tool on Python 3.13 and the
+  [PebbleOS SDK](https://github.com/coredevices/PebbleOS-SDK), which
+  supplies `qemu-pebble` and the ARM compiler. It prints a plan and
+  changes nothing until you pass `--yes`.
+- `scripts/pebble-env.sh` (source it) and `scripts/doctor.sh` (check it).
+- `scripts/pair-android-emulator.sh` attaches the running emulator to
+  the Core Devices app on an Android emulator, so a watch app and an
+  Android app can be tested together. `pebble install --adb` then
+  installs through the phone.
+- `scripts/build-core-app.sh` builds the Core Devices app from
+  [coredevices/mobileapp](https://github.com/coredevices/mobileapp)
+  when Google Play is not usable.
+- `references/troubleshooting.md` lists symptoms and fixes.
+
+Install it the same way as `pebble-watchface`, using the
+`skills/pebble-emulator` directory. Checked on macOS 15, Apple Silicon,
+basalt, with pebble tool 5.0.40, SDK 4.33.1 and PebbleOS SDK 0.1.11.
+
+Layout:
+
+```
+skills/pebble-emulator/
+├── SKILL.md
+├── references/troubleshooting.md
+└── scripts/
+    ├── setup-macos.sh
+    ├── pebble-env.sh
+    ├── doctor.sh
+    ├── pair-android-emulator.sh
+    └── build-core-app.sh
+```
+
 ## Updating
 
 Pull the repository and copy `skills/pebble-watchface` over your
@@ -191,6 +235,8 @@ or APIs the skill uses.
 - `pebble build` fails: read the compiler error, fix `src/c/main.c`,
   build again. Make sure `package.json`, `wscript`, and `src/c/main.c`
   exist.
+- `No such file or directory: 'qemu-pebble'` on macOS: see
+  [Emulator on macOS](#emulator-on-macos).
 - The emulator does not start: run `pebble kill`, then
   `pebble install --emulator emery` again. If it is still wedged,
   `pebble wipe` clears emulator state.

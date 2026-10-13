@@ -82,6 +82,8 @@ pebble logs --emulator emery                                  # streams APP_LOG 
 
 If the emulator misbehaves, `pebble kill` stops it and `pebble wipe` clears its stored data; then run `pebble install --emulator emery` again.
 
+On macOS Apple Silicon, `pebble install --emulator` can fail with `No such file or directory: 'qemu-pebble'`: use the `pebble-emulator` skill (`skills/pebble-emulator/SKILL.md`) to install the emulator, and to pair it with an Android emulator when the app needs its phone side.
+
 ## API Documentation
 
 Do not write API calls from memory. [references/live-docs.md](references/live-docs.md) lists the Markdown URL for every API area used by this skill; fetch the page when you need a signature, enum, or platform note. The full index is https://developer.repebble.com/llms.txt, and any page on developer.repebble.com has a Markdown twin at the same URL with `.md` appended.
