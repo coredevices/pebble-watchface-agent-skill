@@ -27,7 +27,14 @@ Pick the agent you use. Each one reads the same `SKILL.md`.
 
 ### Claude Code
 
-Copy the skill directory into your project or into your home
+Install it as a plugin from this repository's marketplace:
+
+```
+/plugin marketplace add coredevices/pebble-watchface-agent-skill
+/plugin install pebble-watchface@pebble-watchface-marketplace
+```
+
+Or copy the skill directory into your project or into your home
 directory:
 
 ```bash

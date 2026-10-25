@@ -1,0 +1,8 @@
+{
+  "name": "pebble-watchface",
+  "description": "Generate complete Pebble smartwatch watchfaces, build PBW artifacts, and test in QEMU emulator",
+  "version": "1.0.0",
+  "author": {
+    "name": "coredevices"
+  }
+}
